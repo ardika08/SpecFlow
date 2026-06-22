@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 218 31% 11%;
+  --foreground: 42 42% 92%;
+  --card: 221 24% 17%;
+  --card-foreground: 42 42% 92%;
+  --popover: 221 24% 16%;
+  --popover-foreground: 42 42% 92%;
+  --primary: 198 95% 67%;
+  --primary-foreground: 220 36% 9%;
+  --secondary: 221 20% 22%;
+  --secondary-foreground: 42 32% 88%;
+  --muted: 221 18% 20%;
+  --muted-foreground: 219 16% 72%;
+  --accent: 23 86% 60%;
+  --accent-foreground: 34 55% 94%;
+  --destructive: 0 76% 47%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 218 18% 35%;
+  --input: 218 18% 35%;
+  --ring: 198 95% 67%;
+  --radius: 1rem;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(75, 190, 255, 0.16), transparent 30rem),
+    radial-gradient(circle at 82% 16%, rgba(238, 116, 68, 0.13), transparent 28rem),
+    radial-gradient(circle at 50% 115%, rgba(246, 177, 70, 0.1), transparent 34rem),
+    linear-gradient(135deg, #121a27 0%, #182231 46%, #101722 100%);
+  color: hsl(var(--foreground));
+}
+
+::selection {
+  background: rgba(87, 201, 255, 0.32);
+  color: #fff7e8;
+}
+
+select.select-premium,
+select.select-premium option,
+select.select-premium optgroup {
+  color-scheme: dark;
+}
+
+select.select-premium option {
+  background: #182231;
+  color: #f6ecdd;
+}
+
+select.select-premium option:checked,
+select.select-premium option:hover,
+select.select-premium option:focus {
+  background: #243149;
+  color: #ffffff;
+}
+
+select.select-premium optgroup {
+  background: #121a27;
+  color: #9db2c9;
+}
+
+.prose-spec h1,
+.prose-spec h2,
+.prose-spec h3 {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.03em;
+  color: #f6ecdd;
+}
+
+.prose-spec h2[id],
+.prose-spec h3[id] {
+  scroll-margin-top: 1rem;
+}
+
+.prose-spec h1 {
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.prose-spec h2 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.35rem;
+}
+
+.prose-spec p,
+.prose-spec li {
+  color: #c9d3df;
+  line-height: 1.8;
+}
+
+.prose-spec ul {
+  margin-left: 1.25rem;
+  list-style: disc;
+}
+
+.prose-spec code {
+  border-radius: 0.35rem;
+  background: rgba(31, 45, 64, 0.95);
+  padding: 0.12rem 0.32rem;
+  color: #bfeaff;
+}

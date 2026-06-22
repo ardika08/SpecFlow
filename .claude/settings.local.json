@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sqlite3 local.db \".tables\")",
+      "Bash(sqlite3 local.db \"INSERT INTO users \\(id, name, email, email_verified, password_hash, tier\\) VALUES \\('admin-001', 'Ardika Yudha', 'ardika.yudha08@gmail.com', 1, 'Admin123', 'Pro'\\);\")",
+      "Bash(sqlite3 local.db)",
+      "Bash(sqlite3 local.db \"INSERT INTO users \\(id, name, email, email_verified, password_hash, tier\\) VALUES \\('admin-001', 'Ardika Yudha', 'ardika.yudha08@gmail.com', 1, 'Admin123', 'Pro'\\); INSERT INTO accounts \\(id, user_id, account_id, provider_id, password\\) VALUES \\('acc-admin-001', 'admin-001', 'ardika.yudha08@gmail.com', 'credential', 'Admin123'\\);\")",
+      "Bash(sqlite3 -header -column local.db \"SELECT u.id, u.name, u.email, u.tier FROM users u;\")",
+      "Bash(sqlite3 -header -column local.db \"SELECT id, user_id, account_id, provider_id FROM accounts;\")",
+      "Bash(npm run *)",
+      "Bash(sqlite3 local.db 'UPDATE accounts SET password = '\\\\''$2b$10$UkyuSJlAd.pbCVN3OYhF9eWKhV07QNDthbZZrrDx7lvLmU5Zbsk4C'\\\\'' WHERE user_id = '\\\\''admin-001'\\\\'';')",
+      "Bash(sqlite3 -header -column local.db \"SELECT id, user_id, substr\\(password, 1, 20\\) as password FROM accounts WHERE user_id = 'admin-001';\")",
+      "Bash(sqlite3 -header -column local.db \"SELECT u.id, u.name, u.email, a.account_id, a.provider_id, substr\\(u.password_hash, 1, 20\\) as user_hash, substr\\(a.password, 1, 20\\) as acct_pwd FROM users u LEFT JOIN accounts a ON u.id = a.user_id WHERE u.email = 'ardika.yudha08@gmail.com';\")",
+      "Bash(npm start *)"
+    ]
+  }
+}
