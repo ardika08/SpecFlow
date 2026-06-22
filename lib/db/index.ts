@@ -3,9 +3,11 @@
  * Supports SQLite (default) and PostgreSQL (via DATABASE_URL)
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-var-requires */
+
 import * as schema from "./schema";
-import { drizzle } from "drizzle-orm";
-import type { NodePostgresDatabase } from "drizzle-orm/node-postgres";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 // Database provider type
 type DatabaseProvider = "sqlite" | "postgresql";
@@ -13,7 +15,10 @@ type DatabaseProvider = "sqlite" | "postgresql";
 const provider = (process.env.DATABASE_PROVIDER ||
   (process.env.DATABASE_URL?.startsWith("postgres") ? "postgresql" : "sqlite")) as DatabaseProvider;
 
-let db: NodePostgresDatabase<typeof schema> | ReturnType<typeof drizzle<typeof schema>>;
+// Generic database type (will be resolved at runtime)
+type Database = NodePgDatabase<typeof schema> | ReturnType<typeof import("drizzle-orm/better-sqlite3").drizzle<typeof schema>>;
+
+let db: Database;
 
 /**
  * Initialize SQLite database

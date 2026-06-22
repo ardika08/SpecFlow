@@ -70,8 +70,11 @@ export async function initSentry() {
  * Capture exception with context
  */
 export function captureException(error: Error, context?: Record<string, unknown>) {
-  if (isSentryEnabled && typeof window !== "undefined" && (window as any).Sentry) {
-    (window as any).Sentry.captureException(error, { extra: context });
+  if (isSentryEnabled && typeof window !== "undefined") {
+    const sentryWindow = window as typeof window & { Sentry?: { captureException: (error: Error, context?: Record<string, unknown>) => void } };
+    if (sentryWindow.Sentry) {
+      sentryWindow.Sentry.captureException(error, { extra: context });
+    }
   } else {
     console.error("Exception captured:", error, context);
   }
@@ -85,8 +88,11 @@ export function captureMessage(
   level: "info" | "warning" | "error" = "info",
   context?: Record<string, unknown>
 ) {
-  if (isSentryEnabled && typeof window !== "undefined" && (window as any).Sentry) {
-    (window as any).Sentry.captureMessage(message, { level, extra: context });
+  if (isSentryEnabled && typeof window !== "undefined") {
+    const sentryWindow = window as typeof window & { Sentry?: { captureMessage: (message: string, context?: Record<string, unknown>) => void } };
+    if (sentryWindow.Sentry) {
+      sentryWindow.Sentry.captureMessage(message, { level, extra: context });
+    }
   } else {
     console.log(`[${level.toUpperCase()}]`, message, context);
   }

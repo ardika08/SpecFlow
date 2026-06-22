@@ -12,11 +12,14 @@ export const isPostHogEnabled = Boolean(POSTHOG_KEY);
  * PostHog page view tracking (server-side safe)
  */
 export function trackPageView(pathname: string, properties?: Record<string, unknown>) {
-  if (typeof window !== "undefined" && isPostHogEnabled && (window as any).posthog) {
-    (window as any).posthog.capture("$pageview", {
-      $current_url: pathname,
-      ...properties,
-    });
+  if (typeof window !== "undefined" && isPostHogEnabled) {
+    const posthogWindow = window as typeof window & { posthog?: { capture: (event: string, props?: Record<string, unknown>) => void } };
+    if (posthogWindow.posthog) {
+      posthogWindow.posthog.capture("$pageview", {
+        $current_url: pathname,
+        ...properties,
+      });
+    }
   }
 }
 
@@ -27,8 +30,11 @@ export function trackEvent(
   eventName: string,
   properties?: Record<string, unknown>
 ) {
-  if (typeof window !== "undefined" && isPostHogEnabled && (window as any).posthog) {
-    (window as any).posthog.capture(eventName, properties);
+  if (typeof window !== "undefined" && isPostHogEnabled) {
+    const posthogWindow = window as typeof window & { posthog?: { capture: (event: string, props?: Record<string, unknown>) => void } };
+    if (posthogWindow.posthog) {
+      posthogWindow.posthog.capture(eventName, properties);
+    }
   }
 }
 

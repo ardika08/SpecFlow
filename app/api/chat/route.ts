@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verifikasi ownership: project harus milik user yang login
-    const project = await db
+    const project = await (db as any)
       .select()
       .from(projects)
       .where(eq(projects.id, projectId))
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Check user's monthly quota for chat
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
 
-    let quota = await db
+    let quota = await (db as any)
       .select()
       .from(usageQuotas)
       .where(and(eq(usageQuotas.userId, user.id), eq(usageQuotas.month, currentMonth)))

@@ -37,8 +37,10 @@ export function PostHogProvider() {
 export function PostHogPageView({ path }: { path: string }) {
   useEffect(() => {
     if (!isPostHogEnabled || typeof window === "undefined") return;
-    if ((window as any).posthog) {
-      (window as any).posthog.capture("$pageview", {
+    // Type-safe access to window.posthog
+    const posthogWindow = window as typeof window & { posthog?: { capture: (event: string, props?: Record<string, unknown>) => void } };
+    if (posthogWindow.posthog) {
+      posthogWindow.posthog.capture("$pageview", {
         $current_url: path,
       });
     }

@@ -26,18 +26,22 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(projects.updatedAt));
 
     return NextResponse.json({
-      projects: userProjects.map((p) => ({
-        id: p.id,
-        title: p.title,
-        status: p.status,
-        tier: p.tier,
-        updatedAt: new Date(p.updatedAt).toLocaleDateString("id-ID", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        }),
-        summary: p.initialIdea?.substring(0, 150) + (p.initialIdea?.length > 150 ? "..." : "") || "No description",
-      })),
+      projects: userProjects.map((p: { id: string; title: string; status: string; tier: string; updatedAt: Date; initialIdea?: string | null }) => {
+        const idea = p.initialIdea || "";
+        const summary = idea.length > 150 ? idea.substring(0, 150) + "..." : idea;
+        return {
+          id: p.id,
+          title: p.title,
+          status: p.status,
+          tier: p.tier,
+          updatedAt: new Date(p.updatedAt).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }),
+          summary: summary || "No description",
+        };
+      }),
     });
   } catch (error) {
     console.error("Error fetching projects:", error);
