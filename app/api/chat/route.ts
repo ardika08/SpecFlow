@@ -28,11 +28,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Verifikasi ownership: project harus milik user yang login
-    const project = await (db as any)
+    const project = await db
       .select()
       .from(projects)
       .where(eq(projects.id, projectId))
-      .get();
+      .limit(1)
+      .then(rows => rows[0]);
 
     if (!project) {
       return new Response(JSON.stringify({ error: "Project not found" }), { status: 404 });
@@ -45,11 +46,12 @@ export async function POST(request: NextRequest) {
     // Check user's monthly quota for chat
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
 
-    let quota = await (db as any)
+    let quota = await db
       .select()
       .from(usageQuotas)
       .where(and(eq(usageQuotas.userId, user.id), eq(usageQuotas.month, currentMonth)))
-      .get();
+      .limit(1)
+      .then(rows => rows[0]);
 
     if (!quota) {
       // Create new quota record for this month
