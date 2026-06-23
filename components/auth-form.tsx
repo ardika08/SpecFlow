@@ -6,8 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { authClient, useSession } from "@/lib/hooks";
-import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/hooks";
 
 type AuthMode = "login" | "register";
 
@@ -17,24 +16,41 @@ interface AuthFormProps {
   onSuccess?: () => void;
 }
 
-export function AuthForm({ mode, onModeChange, onSuccess }: AuthFormProps) {
+export function AuthForm({ mode, onModeChange }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
-  const { refetch: refetchSession } = useSession();
-  const router = useRouter();
 
   const handleGoogleAuth = async () => {
     setLoading(true);
 
     try {
-      // Better Auth v1: redirect akan terjadi otomatis
-      // tapi kita perlu handle error jika ada
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/dashboard",
+      console.log("Memulai Google Auth untuk:", mode);
+
+      // Panggil API untuk dapat URL Google OAuth
+      const response = await fetch("/api/auth/sign-in/social", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          provider: "google",
+          callbackURL: "/dashboard",
+        }),
       });
 
-      // Jika sampai sini, berarti ada error atau redirect tidak terjadi
-      setLoading(false);
+      const data = await response.json();
+
+      console.log("Response dari server:", data);
+
+      if (data.url) {
+        // Redirect ke URL Google OAuth
+        window.location.href = data.url;
+      } else if (data.error) {
+        toast.error(data.error || "Gagal login dengan Google");
+        setLoading(false);
+      } else {
+        toast.error("Terjadi kesalahan yang tidak diketahui");
+        setLoading(false);
+      }
     } catch (error) {
       console.error("Google Auth error:", error);
       toast.error(error instanceof Error ? error.message : "Gagal login dengan Google");
