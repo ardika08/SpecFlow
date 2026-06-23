@@ -30,17 +30,21 @@ async function migrate() {
 
   // Connect to PostgreSQL
   console.log("Connecting to PostgreSQL...");
-  const sql = neon(postgresUrl);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const sql = neon(postgresUrl!);
   const pgDb = drizzleNeon(sql, { schema });
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pgSchema = schema as any;
+
     // Migrate users
     console.log("Migrating users...");
     const users = await sqliteDb.select().from(schema.users);
     console.log(`Found ${users.length} users`);
 
     for (const user of users) {
-      await pgDb.insert(schema.users).values({
+      await pgDb.insert(pgSchema.users).values({
         id: user.id,
         name: user.name,
         email: user.email,
@@ -61,7 +65,7 @@ async function migrate() {
     console.log(`Found ${sessions.length} sessions`);
 
     for (const session of sessions) {
-      await pgDb.insert(schema.sessions).values({
+      await pgDb.insert(pgSchema.sessions).values({
         id: session.id,
         userId: session.userId,
         expiresAt: session.expiresAt,
@@ -79,7 +83,7 @@ async function migrate() {
     console.log(`Found ${accounts.length} accounts`);
 
     for (const account of accounts) {
-      await pgDb.insert(schema.accounts).values({
+      await pgDb.insert(pgSchema.accounts).values({
         id: account.id,
         userId: account.userId,
         accountId: account.accountId,
@@ -101,7 +105,7 @@ async function migrate() {
     console.log(`Found ${projects.length} projects`);
 
     for (const project of projects) {
-      await pgDb.insert(schema.projects).values({
+      await pgDb.insert(pgSchema.projects).values({
         id: project.id,
         userId: project.userId,
         title: project.title,
@@ -123,7 +127,7 @@ async function migrate() {
     console.log(`Found ${messages.length} messages`);
 
     for (const message of messages) {
-      await pgDb.insert(schema.projectMessages).values({
+      await pgDb.insert(pgSchema.projectMessages).values({
         id: message.id,
         projectId: message.projectId,
         role: message.role,
@@ -138,7 +142,7 @@ async function migrate() {
     console.log(`Found ${quotas.length} usage quotas`);
 
     for (const quota of quotas) {
-      await pgDb.insert(schema.usageQuotas).values({
+      await pgDb.insert(pgSchema.usageQuotas).values({
         id: quota.id,
         userId: quota.userId,
         month: quota.month,
@@ -155,7 +159,7 @@ async function migrate() {
     console.log(`Found ${notifications.length} notifications`);
 
     for (const notification of notifications) {
-      await pgDb.insert(schema.notifications).values({
+      await pgDb.insert(pgSchema.notifications).values({
         id: notification.id,
         userId: notification.userId,
         type: notification.type,

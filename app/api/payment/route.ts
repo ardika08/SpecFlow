@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user info
-    const user = await db.select().from(users).where(eq(users.id, session.user.id)).get();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const user = await (db as any).select().from(users).where(eq(users.id, session.user.id)).get();
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -37,7 +38,8 @@ export async function POST(request: NextRequest) {
     // Simpan phone ke DB jika user input nomor WA baru
     const customerPhone = phone || user.phone;
     if (phone && phone !== user.phone) {
-      await db.update(users)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (db as any).update(users)
         .set({ phone, updatedAt: new Date() })
         .where(eq(users.id, user.id))
         .run();

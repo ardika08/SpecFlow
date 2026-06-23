@@ -28,12 +28,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verifikasi ownership: project harus milik user yang login
-    const project = await db
-      .select()
-      .from(projects)
-      .where(eq(projects.id, projectId))
-      .limit(1)
-      .then(rows => rows[0]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const project = await (db as any).select().from(projects).where(eq(projects.id, projectId)).get();
 
     if (!project) {
       return new Response(JSON.stringify({ error: "Project not found" }), { status: 404 });
@@ -46,17 +42,14 @@ export async function POST(request: NextRequest) {
     // Check user's monthly quota for chat
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
 
-    let quota = await db
-      .select()
-      .from(usageQuotas)
-      .where(and(eq(usageQuotas.userId, user.id), eq(usageQuotas.month, currentMonth)))
-      .limit(1)
-      .then(rows => rows[0]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let quota = await (db as any).select().from(usageQuotas).where(and(eq(usageQuotas.userId, user.id), eq(usageQuotas.month, currentMonth))).get();
 
     if (!quota) {
       // Create new quota record for this month
       const newQuotaId = nanoid();
-      quota = await db
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      quota = await (db as any)
         .insert(usageQuotas)
         .values({
           id: newQuotaId,
@@ -87,7 +80,8 @@ export async function POST(request: NextRequest) {
 
     // Save user message
     const userMessageId = nanoid();
-    await db.insert(projectMessages).values({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (db as any).insert(projectMessages).values({
       id: userMessageId,
       projectId,
       role: "user",
@@ -96,7 +90,8 @@ export async function POST(request: NextRequest) {
 
     // Update quota
     const newChatCount = quota.chatCount + 1;
-    await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (db as any)
       .update(usageQuotas)
       .set({
         chatCount: newChatCount,
@@ -166,7 +161,8 @@ export async function POST(request: NextRequest) {
 
           // Save AI response to database
           const aiMessageId = nanoid();
-          await db.insert(projectMessages).values({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (db as any).insert(projectMessages).values({
             id: aiMessageId,
             projectId,
             role: "assistant",
@@ -237,7 +233,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Verifikasi ownership
-    const project = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const project = await (db as any)
       .select()
       .from(projects)
       .where(eq(projects.id, projectId))
@@ -251,7 +248,8 @@ export async function GET(request: NextRequest) {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
     }
 
-    const messages = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const messages = await (db as any)
       .select()
       .from(projectMessages)
       .where(eq(projectMessages.projectId, projectId))

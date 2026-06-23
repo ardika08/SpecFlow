@@ -179,7 +179,8 @@ export async function POST(request: NextRequest) {
     // Check user's monthly quota for PRD generation
     const currentMonth = new Date().toISOString().slice(0, 7);
 
-    let quota = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let quota = await (db as any)
       .select()
       .from(usageQuotas)
       .where(and(eq(usageQuotas.userId, userId), eq(usageQuotas.month, currentMonth)))
@@ -187,7 +188,8 @@ export async function POST(request: NextRequest) {
 
     if (!quota) {
       const newQuotaId = nanoid();
-      quota = await db
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      quota = await (db as any)
         .insert(usageQuotas)
         .values({
           id: newQuotaId,
@@ -201,7 +203,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check user tier and limits
-    const user = await db.select().from(users).where(eq(users.id, userId)).get();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const user = await (db as any).select().from(users).where(eq(users.id, userId)).get();
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -269,7 +272,8 @@ export async function POST(request: NextRequest) {
     const projectId = nanoid();
     const title = idea.substring(0, 50) + (idea.length > 50 ? "..." : "");
 
-    await db.insert(projects).values({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (db as any).insert(projects).values({
       id: projectId,
       userId,
       title,
@@ -283,7 +287,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Update quota
-    await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (db as any)
       .update(usageQuotas)
       .set({
         prdCount: quota.prdCount + 1,

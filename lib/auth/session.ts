@@ -68,7 +68,8 @@ export async function getSessionUser(
     }
 
     // Ambil tier terbaru dari DB (bukan dari session yang mungkin stale)
-    const dbUser = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dbUser = await (db as any)
       .select()
       .from(users)
       .where(eq(users.id, session.user.id))

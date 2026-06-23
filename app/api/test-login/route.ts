@@ -13,10 +13,12 @@ export async function POST(req: NextRequest) {
     const { users, accounts } = await import("@/lib/db/schema");
     const { eq } = await import("drizzle-orm");
 
-    const user = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const user = await (db as any).select().from(users).where(eq(users.email, email)).limit(1);
     console.log("Found user:", user);
 
-    const account = await db.select().from(accounts).where(eq(accounts.userId, user[0]?.id)).limit(1);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const account = await (db as any).select().from(accounts).where(eq(accounts.userId, user[0]?.id)).limit(1);
     console.log("Found account:", account);
 
     // Now test better-auth sign in

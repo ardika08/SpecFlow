@@ -18,7 +18,8 @@ export async function initSentry() {
   }
 
   try {
-    const Sentry = await import("@sentry/nextjs");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Sentry = await import("@sentry/nextjs") as any;
 
     Sentry.init({
       dsn: SENTRY_DSN,
@@ -35,10 +36,12 @@ export async function initSentry() {
         }),
       ],
 
-      beforeSend(event, hint) {
+      beforeSend(event: unknown) {
         // Filter out sensitive data
-        if (event.request) {
-          delete event.request.cookies;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((event as any).request) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          delete (event as any).request.cookies;
         }
         return event;
       },

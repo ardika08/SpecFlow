@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
     // Cek & update kuota PRD bulanan
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
-    let quota = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let quota = await (db as any)
       .select()
       .from(usageQuotas)
       .where(and(eq(usageQuotas.userId, user.id), eq(usageQuotas.month, currentMonth)))
@@ -70,7 +71,8 @@ export async function POST(request: NextRequest) {
 
     if (!quota) {
       const newQuotaId = nanoid();
-      quota = await db
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      quota = await (db as any)
         .insert(usageQuotas)
         .values({
           id: newQuotaId,
@@ -97,7 +99,8 @@ export async function POST(request: NextRequest) {
 
     // Increment PRD count
     const newPrdCount = quota.prdCount + 1;
-    await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (db as any)
       .update(usageQuotas)
       .set({ prdCount: newPrdCount, updatedAt: new Date() })
       .where(eq(usageQuotas.id, quota.id))

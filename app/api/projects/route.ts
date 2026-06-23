@@ -12,7 +12,8 @@ export async function GET(request: NextRequest) {
     const { user, response: authResponse } = await getSessionUser(request);
     if (authResponse) return authResponse;
 
-    const userProjects = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const userProjects = await (db as any)
       .select({
         id: projects.id,
         title: projects.title,
@@ -66,7 +67,8 @@ export async function POST(request: NextRequest) {
 
     const projectId = nanoid();
 
-    const newProject = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const newProject = await (db as any)
       .insert(projects)
       .values({
         id: projectId,

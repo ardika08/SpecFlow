@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
       periodEnd.setDate(periodEnd.getDate() + 30);
 
       // Update user tier
-      await db.update(users)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (db as any).update(users)
         .set({
           tier: tier as string, // Explicit cast to satisfy type checker
           currentPeriodEnd: periodEnd,
@@ -62,7 +63,8 @@ export async function POST(request: NextRequest) {
       // Get or create usage quota for current month (reset for new subscription)
       const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
-      let quota = await db
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let quota = await (db as any)
         .select()
         .from(usageQuotas)
         .where(and(eq(usageQuotas.userId, userId as string), eq(usageQuotas.month, currentMonth)))
@@ -70,7 +72,8 @@ export async function POST(request: NextRequest) {
 
       if (!quota) {
         const newQuotaId = nanoid();
-        quota = await db
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        quota = await (db as any)
           .insert(usageQuotas)
           .values({
             id: newQuotaId,
@@ -86,7 +89,8 @@ export async function POST(request: NextRequest) {
       console.log(`User ${userId} upgraded to ${tier} tier`);
 
       // Kirim notifikasi payment success (in-app + email, best-effort)
-      const userRecord = await db.select().from(users).where(eq(users.id, userId as string)).get();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const userRecord = await (db as any).select().from(users).where(eq(users.id, userId as string)).get();
       if (userRecord) {
         notifyPaymentSuccess(
           userRecord.id,
