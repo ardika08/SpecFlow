@@ -1,70 +1,81 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
-import { generateId } from "better-auth";
+import { pgTable, text, timestamp, boolean, bigint } from "drizzle-orm/pg-core";
+import { randomBytes } from "crypto";
 
 /**
- * Users table - menyimpan profil pengguna, tier aktif, dan kuota pemakaian
- * Compatible with Better Auth (PostgreSQL version)
+ * Generate random ID for Auth.js tables
+ */
+function generateId(length = 16) {
+  return randomBytes(length).toString("hex");
+}
+
+/**
+ * ============================================================================
+ * AUTH.JS v5 TABLES
+ * ============================================================================
+ */
+
+/**
+ * Users table - Auth.js v5 compatible dengan custom fields (tier, phone, dll)
  */
 export const users = pgTable("users", {
   id: text("id").primaryKey().$defaultFn(() => generateId()),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").notNull().default(false),
-  passwordHash: text("password_hash"),
-  avatar: text("avatar"),
+  emailVerified: timestamp("email_verified"),
+  image: text("image"),
+  // Custom fields untuk SpecFlow
   phone: text("phone"),
-  tier: text("tier").notNull().default("Freemium"), // Freemium | Starter | Pro
-  currentPeriodEnd: timestamp("current_period_end"), // Tanggal berakhirnya langganan (null = Freemium)
+  tier: text("tier").notNull().default("Freemium"),
+  currentPeriodEnd: timestamp("current_period_end"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 /**
- * Sessions table - untuk Better Auth session management
- */
-export const sessions = pgTable("sessions", {
-  id: text("id").primaryKey().$defaultFn(() => generateId()),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  expiresAt: timestamp("expires_at").notNull(),
-  token: text("token").notNull().unique(),
-  ipAddress: text("ip_address"),
-  userAgent: text("user_agent"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-/**
- * Accounts table - untuk Better Auth OAuth provider support
- * Required by better-auth even for email/password auth
+ * Accounts table - Auth.js v5 format untuk OAuth providers
  */
 export const accounts = pgTable("accounts", {
   id: text("id").primaryKey().$defaultFn(() => generateId()),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  accountId: text("account_id").notNull(),
-  providerId: text("provider_id").notNull(),
-  accessToken: text("access_token"),
-  refreshToken: text("refresh_token"),
-  idToken: text("id_token"),
-  expiresAt: timestamp("expires_at"),
-  accessTokenExpiresAt: timestamp("access_token_expires_at"),
-  password: text("password"),
-  passwordHash: text("password_hash"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  type: text("type").notNull(), // oauth | email | credentials
+  provider: text("provider").notNull(), // google, github, dll
+  providerAccountId: text("provider_account_id").notNull(),
+  refresh_token: text("refresh_token"),
+  access_token: text("access_token"),
+  expires_at: bigint("expires_at", { mode: "number" }),
+  token_type: text("token_type"),
+  scope: text("scope"),
+  id_token: text("id_token"),
+  session_state: text("session_state"),
+});
+
+// Unique constraint on provider + providerAccountId
+// This will be added via migration
+
+/**
+ * Sessions table - Auth.js v5 format
+ */
+export const sessions = pgTable("sessions", {
+  id: text("id").primaryKey().$defaultFn(() => generateId()),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires").notNull(),
+  sessionToken: text("session_token").notNull().unique(),
 });
 
 /**
- * Verification table - untuk Better Auth email verification
- * Required by Better Auth even when verification is disabled
+ * Verification tokens table - Auth.js v5 format untuk email verification
  */
-export const verification = pgTable("verification", {
-  id: text("id").primaryKey().$defaultFn(() => generateId()),
+export const verification_tokens = pgTable("verification_tokens", {
   identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  token: text("token").notNull().unique(),
+  expires: timestamp("expires").notNull(),
 });
+
+/**
+ * ============================================================================
+ * SPECFLOW BUSINESS TABLES
+ * ============================================================================
+ */
 
 /**
  * Projects table - menyimpan ide awal, jawaban konteks, stack pilihan, hasil PRD, dan status
@@ -74,53 +85,53 @@ export const projects = pgTable("projects", {
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   initialIdea: text("initial_idea").notNull(),
-  answers: text("answers"), // JSON string dari QuestionState
-  techMode: text("tech_mode").notNull().default("auto"), // auto | manual
-  stack: text("stack"), // JSON string dari StackSelections
-  generatedPrd: text("generated_prd"), // Markdown content
-  status: text("status").notNull().default("Draft"), // Draft | Generated | Needs_review
+  answers: text("answers"),
+  techMode: text("tech_mode").notNull().default("auto"),
+  stack: text("stack"),
+  generatedPrd: text("generated_prd"),
+  status: text("status").notNull().default("Draft"),
   tier: text("tier").notNull().default("Freemium"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 /**
- * ProjectMessages table - menyimpan histori interaksi revisi antara user dan AI reviewer
+ * ProjectMessages table - menyimpan histori interaksi revisi
  */
 export const projectMessages = pgTable("project_messages", {
   id: text("id").primaryKey(),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-  role: text("role").notNull(), // user | assistant | system
+  role: text("role").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 /**
- * UsageQuotas table - menyimpan tracking kuota pemakaian per user per bulan
+ * UsageQuotas table - tracking kuota pemakaian per user per bulan
  */
 export const usageQuotas = pgTable("usage_quotas", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  month: text("month").notNull(), // Format: YYYY-MM (e.g., "2026-06")
-  prdCount: text("prd_count").notNull().default("0"), // Store as string, convert to number when needed
-  chatCount: text("chat_count").notNull().default("0"), // Store as string, convert to number when needed
+  month: text("month").notNull(),
+  prdCount: text("prd_count").notNull().default("0"),
+  chatCount: text("chat_count").notNull().default("0"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 /**
- * Notifications table - menyimpan in-app notifications untuk user
+ * Notifications table - in-app notifications
  */
 export const notifications = pgTable("notifications", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  type: text("type").notNull(), // info | success | warning | error | quota_warning | payment_success | prd_generated | chat_reply
+  type: text("type").notNull(),
   title: text("title").notNull(),
   message: text("message").notNull(),
   actionUrl: text("action_url"),
   actionLabel: text("action_label"),
   read: boolean("read").notNull().default(false),
-  metadata: text("metadata"), // JSON string untuk data tambahan
+  metadata: text("metadata"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
