@@ -6,10 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { createAuthClient } from "better-auth/client";
-
-// Create auth client
-const authClient = createAuthClient();
+import { authClient } from "@/lib/hooks";
 
 type AuthMode = "login" | "register";
 
@@ -28,7 +25,8 @@ export function AuthForm({ mode, onModeChange }: AuthFormProps) {
     try {
       console.log("Memulai Google Auth untuk:", mode);
 
-      // Better Auth v1: signIn.social akan otomatis redirect ke Google
+      // Better Auth dengan Next.js: gunakan signIn.social
+      // Redirect akan terjadi otomatis
       await authClient.signIn.social({
         provider: "google",
         callbackURL: "/dashboard",
