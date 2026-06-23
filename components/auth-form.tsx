@@ -26,28 +26,23 @@ export function AuthForm({ mode, onModeChange, onSuccess }: AuthFormProps) {
     setLoading(true);
 
     try {
-      if (mode === "register") {
-        await authClient.signIn.social({
-          provider: "google",
-          callbackURL: "/",
-        });
+      const result = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
 
-        toast.success("Registrasi berhasil dengan Google!");
+      // Better Auth mengembalikan URL untuk redirect
+      if (result.data?.url) {
+        window.location.href = result.data.url;
+      } else if (result.error) {
+        toast.error(result.error.message || "Gagal login dengan Google");
+        setLoading(false);
       } else {
-        await authClient.signIn.social({
-          provider: "google",
-          callbackURL: "/",
-        });
-
-        toast.success("Login berhasil dengan Google!");
-
-        await refetchSession();
-
-        if (onSuccess) onSuccess();
+        toast.error("Terjadi kesalahan yang tidak diketahui");
+        setLoading(false);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Terjadi kesalahan");
-    } finally {
       setLoading(false);
     }
   };
