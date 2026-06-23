@@ -3,9 +3,12 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 
+const dbProvider = process.env.DATABASE_PROVIDER ||
+  (process.env.DATABASE_URL?.startsWith("postgres") ? "postgresql" : "sqlite");
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "sqlite",
+    provider: dbProvider as "sqlite" | "postgresql",
     schema: {
       user: schema.users,
       session: schema.sessions,
