@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { authClient } from "@/lib/hooks";
 
 type AuthMode = "login" | "register";
 
@@ -25,32 +24,17 @@ export function AuthForm({ mode, onModeChange }: AuthFormProps) {
     try {
       console.log("Memulai Google Auth untuk:", mode);
 
-      // Panggil API untuk dapat URL Google OAuth
-      const response = await fetch("/api/auth/sign-in/social", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          provider: "google",
-          callbackURL: "/dashboard",
-        }),
+      // Better Auth v1 endpoint untuk social sign-in
+      // Redirect langsung ke Google OAuth URL
+      const params = new URLSearchParams({
+        provider: "google",
+        callbackURL: "/dashboard",
       });
 
-      const data = await response.json();
+      // Redirect ke endpoint Better Auth untuk sign-in dengan Google
+      window.location.href = `/api/auth/sign-in/social?${params.toString()}`;
 
-      console.log("Response dari server:", data);
-
-      if (data.url) {
-        // Redirect ke URL Google OAuth
-        window.location.href = data.url;
-      } else if (data.error) {
-        toast.error(data.error || "Gagal login dengan Google");
-        setLoading(false);
-      } else {
-        toast.error("Terjadi kesalahan yang tidak diketahui");
-        setLoading(false);
-      }
+      // Loading akan tetap true karena redirect akan terjadi
     } catch (error) {
       console.error("Google Auth error:", error);
       toast.error(error instanceof Error ? error.message : "Gagal login dengan Google");
