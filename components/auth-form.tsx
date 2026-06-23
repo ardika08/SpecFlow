@@ -26,23 +26,18 @@ export function AuthForm({ mode, onModeChange, onSuccess }: AuthFormProps) {
     setLoading(true);
 
     try {
-      const result = await authClient.signIn.social({
+      // Better Auth v1: redirect akan terjadi otomatis
+      // tapi kita perlu handle error jika ada
+      await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/dashboard",
       });
 
-      // Better Auth mengembalikan URL untuk redirect
-      if (result.data?.url) {
-        window.location.href = result.data.url;
-      } else if (result.error) {
-        toast.error(result.error.message || "Gagal login dengan Google");
-        setLoading(false);
-      } else {
-        toast.error("Terjadi kesalahan yang tidak diketahui");
-        setLoading(false);
-      }
+      // Jika sampai sini, berarti ada error atau redirect tidak terjadi
+      setLoading(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Terjadi kesalahan");
+      console.error("Google Auth error:", error);
+      toast.error(error instanceof Error ? error.message : "Gagal login dengan Google");
       setLoading(false);
     }
   };
