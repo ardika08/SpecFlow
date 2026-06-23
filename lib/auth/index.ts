@@ -4,12 +4,14 @@ import { betterAuthAdapter } from "@/lib/auth/adapter";
 export const auth = betterAuth({
   database: betterAuthAdapter,
   emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: false,
-    autoSignUp: true,
-    sendVerificationEmail: false,
-    minPasswordLength: 6,
-    maxPasswordLength: 128,
+    enabled: false,
+  },
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      enabled: true,
+    },
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7,
