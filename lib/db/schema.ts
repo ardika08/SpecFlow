@@ -54,6 +54,19 @@ export const accounts = sqliteTable("accounts", {
 });
 
 /**
+ * Verification table - untuk Better Auth email verification
+ * Required by Better Auth even when verification is disabled
+ */
+export const verification = sqliteTable("verification", {
+  id: text("id").primaryKey().$defaultFn(() => generateId()),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+/**
  * Projects table - menyimpan ide awal, jawaban konteks, stack pilihan, hasil PRD, dan status
  */
 export const projects = sqliteTable("projects", {

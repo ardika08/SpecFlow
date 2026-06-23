@@ -13,5 +13,6 @@ export const betterAuthAdapter = drizzleAdapter(db, {
     user: schema.users,
     session: schema.sessions,
     account: schema.accounts,
+    verification: schema.verification,
   },
 });

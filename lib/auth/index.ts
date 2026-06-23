@@ -5,6 +5,8 @@ export const auth = betterAuth({
   database: betterAuthAdapter,
   emailAndPassword: {
     enabled: false,
+    sendVerificationEmail: false,
+    requireEmailVerification: false,
   },
   socialProviders: {
     google: {
@@ -15,7 +17,7 @@ export const auth = betterAuth({
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7,
-    updateAgeOnExceeds: 60 * 60 * 24,
+    freshAge: 60 * 60 * 24,
   },
   trustedOrigins: [
     "http://localhost:3000",
