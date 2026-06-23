@@ -70,13 +70,13 @@ export async function GET() {
       email: googleUser.email,
       name: googleUser.name,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Test OAuth create error:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
-        stack: error.stack,
+        error: errorMessage,
       },
       { status: 500 }
     );
