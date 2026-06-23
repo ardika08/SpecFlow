@@ -1,44 +1,44 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { generateId } from "better-auth";
 
 /**
  * Users table - menyimpan profil pengguna, tier aktif, dan kuota pemakaian
- * Compatible with Better Auth
+ * Compatible with Better Auth (PostgreSQL version)
  */
-export const users = sqliteTable("users", {
+export const users = pgTable("users", {
   id: text("id").primaryKey().$defaultFn(() => generateId()),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
+  emailVerified: boolean("email_verified").notNull().default(false),
   passwordHash: text("password_hash"),
   avatar: text("avatar"),
   phone: text("phone"),
   tier: text("tier").notNull().default("Freemium"), // Freemium | Starter | Pro
-  currentPeriodEnd: integer("current_period_end", { mode: "timestamp" }), // Tanggal berakhirnya langganan (null = Freemium)
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  currentPeriodEnd: timestamp("current_period_end"), // Tanggal berakhirnya langganan (null = Freemium)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 /**
  * Sessions table - untuk Better Auth session management
  */
-export const sessions = sqliteTable("sessions", {
+export const sessions = pgTable("sessions", {
   id: text("id").primaryKey().$defaultFn(() => generateId()),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
   token: text("token").notNull().unique(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 /**
  * Accounts table - untuk Better Auth OAuth provider support
  * Required by better-auth even for email/password auth
  */
-export const accounts = sqliteTable("accounts", {
+export const accounts = pgTable("accounts", {
   id: text("id").primaryKey().$defaultFn(() => generateId()),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   accountId: text("account_id").notNull(),
@@ -46,30 +46,30 @@ export const accounts = sqliteTable("accounts", {
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   idToken: text("id_token"),
-  expiresAt: integer("expires_at", { mode: "timestamp" }),
+  expiresAt: timestamp("expires_at"),
   password: text("password"),
   passwordHash: text("password_hash"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 /**
  * Verification table - untuk Better Auth email verification
  * Required by Better Auth even when verification is disabled
  */
-export const verification = sqliteTable("verification", {
+export const verification = pgTable("verification", {
   id: text("id").primaryKey().$defaultFn(() => generateId()),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
-  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 /**
  * Projects table - menyimpan ide awal, jawaban konteks, stack pilihan, hasil PRD, dan status
  */
-export const projects = sqliteTable("projects", {
+export const projects = pgTable("projects", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
@@ -80,38 +80,38 @@ export const projects = sqliteTable("projects", {
   generatedPrd: text("generated_prd"), // Markdown content
   status: text("status").notNull().default("Draft"), // Draft | Generated | Needs_review
   tier: text("tier").notNull().default("Freemium"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 /**
  * ProjectMessages table - menyimpan histori interaksi revisi antara user dan AI reviewer
  */
-export const projectMessages = sqliteTable("project_messages", {
+export const projectMessages = pgTable("project_messages", {
   id: text("id").primaryKey(),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   role: text("role").notNull(), // user | assistant | system
   content: text("content").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 /**
  * UsageQuotas table - menyimpan tracking kuota pemakaian per user per bulan
  */
-export const usageQuotas = sqliteTable("usage_quotas", {
+export const usageQuotas = pgTable("usage_quotas", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   month: text("month").notNull(), // Format: YYYY-MM (e.g., "2026-06")
-  prdCount: integer("prd_count").notNull().default(0),
-  chatCount: integer("chat_count").notNull().default(0),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  prdCount: text("prd_count").notNull().default("0"), // Store as string, convert to number when needed
+  chatCount: text("chat_count").notNull().default("0"), // Store as string, convert to number when needed
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 /**
  * Notifications table - menyimpan in-app notifications untuk user
  */
-export const notifications = sqliteTable("notifications", {
+export const notifications = pgTable("notifications", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   type: text("type").notNull(), // info | success | warning | error | quota_warning | payment_success | prd_generated | chat_reply
@@ -119,9 +119,9 @@ export const notifications = sqliteTable("notifications", {
   message: text("message").notNull(),
   actionUrl: text("action_url"),
   actionLabel: text("action_label"),
-  read: integer("read", { mode: "boolean" }).notNull().default(false),
+  read: boolean("read").notNull().default(false),
   metadata: text("metadata"), // JSON string untuk data tambahan
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 /**
