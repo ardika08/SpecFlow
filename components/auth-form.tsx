@@ -6,6 +6,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { createAuthClient } from "better-auth/client";
+
+// Create auth client
+const authClient = createAuthClient();
 
 type AuthMode = "login" | "register";
 
@@ -24,17 +28,15 @@ export function AuthForm({ mode, onModeChange }: AuthFormProps) {
     try {
       console.log("Memulai Google Auth untuk:", mode);
 
-      // Better Auth v1 endpoint untuk social sign-in
-      // Redirect langsung ke Google OAuth URL
-      const params = new URLSearchParams({
+      // Better Auth v1: signIn.social akan otomatis redirect ke Google
+      await authClient.signIn.social({
         provider: "google",
         callbackURL: "/dashboard",
       });
 
-      // Redirect ke endpoint Better Auth untuk sign-in dengan Google
-      window.location.href = `/api/auth/sign-in/social?${params.toString()}`;
-
-      // Loading akan tetap true karena redirect akan terjadi
+      // Jika sampai sini, berarti redirect tidak terjadi
+      console.log("Redirect tidak terjadi secara otomatis");
+      setLoading(false);
     } catch (error) {
       console.error("Google Auth error:", error);
       toast.error(error instanceof Error ? error.message : "Gagal login dengan Google");
