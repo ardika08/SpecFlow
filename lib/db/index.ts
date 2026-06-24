@@ -1,6 +1,7 @@
 /**
  * Database Connection
  * Supports SQLite (default) and PostgreSQL (via DATABASE_URL)
+ * Lazy initialization - connection only created when needed
  */
 
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -15,10 +16,10 @@ type DatabaseProvider = "sqlite" | "postgresql";
 const provider = (process.env.DATABASE_PROVIDER ||
   (process.env.DATABASE_URL?.startsWith("postgres") ? "postgresql" : "sqlite")) as DatabaseProvider;
 
-// Generic database type (will be resolved at runtime)
+// Generic database type
 type Database = NodePgDatabase<typeof schema> | ReturnType<typeof import("drizzle-orm/better-sqlite3").drizzle<typeof schema>>;
 
-let db: Database;
+let dbInstance: Database | null = null;
 
 /**
  * Initialize SQLite database
@@ -47,7 +48,7 @@ function initSQLite() {
 /**
  * Initialize PostgreSQL database
  */
-async function initPostgreSQL() {
+function initPostgreSQL() {
   const { neon } = require("@neondatabase/serverless");
   const { drizzle: drizzleNeon } = require("drizzle-orm/neon-http");
 
@@ -61,17 +62,27 @@ async function initPostgreSQL() {
 }
 
 /**
- * Initialize database based on provider
+ * Get database instance (lazy initialization)
  */
-if (provider === "postgresql") {
-  // PostgreSQL requires async initialization
-  db = await initPostgreSQL();
-  console.log("Using PostgreSQL database");
-} else {
-  // SQLite is synchronous
-  db = initSQLite();
-  console.log("Using SQLite database");
+function getDb(): Database {
+  if (!dbInstance) {
+    if (provider === "postgresql") {
+      dbInstance = initPostgreSQL();
+      console.log("Using PostgreSQL database");
+    } else {
+      dbInstance = initSQLite();
+      console.log("Using SQLite database");
+    }
+  }
+  return dbInstance;
 }
 
-export { db, schema, provider };
+// Export proxy to db for lazy access
+export const db = new Proxy({} as Database, {
+  get(target, prop) {
+    return getDb()[prop as keyof Database];
+  },
+});
+
+export { schema, provider };
 export * from "./schema";
