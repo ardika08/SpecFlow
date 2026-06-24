@@ -14,7 +14,10 @@ import { notifyPasswordChanged } from "@/lib/notifications/notify";
 export async function POST(request: NextRequest) {
   try {
     const { user, response: authResponse } = await getSessionUser(request);
-    if (authResponse) return authResponse;
+    if (authResponse || !user) return authResponse || new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401 }
+    );
 
     // Kirim notifikasi password changed (in-app + email, best-effort)
     await notifyPasswordChanged(user.id, user.email, user.name);
