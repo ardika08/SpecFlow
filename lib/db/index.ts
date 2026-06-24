@@ -74,7 +74,8 @@ function getDb(): Database {
       console.log("Using SQLite database");
     }
   }
-  return dbInstance;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return dbInstance!;
 }
 
 // Export proxy to db for lazy access
