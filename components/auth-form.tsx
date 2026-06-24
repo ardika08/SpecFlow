@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { authClient } from "@/lib/hooks";
+import { signIn } from "next-auth/react";
 
 type AuthMode = "login" | "register";
 
@@ -25,16 +25,10 @@ export function AuthForm({ mode, onModeChange }: AuthFormProps) {
     try {
       console.log("Memulai Google Auth untuk:", mode);
 
-      // Better Auth dengan Next.js: gunakan signIn.social
-      // Redirect akan terjadi otomatis
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/dashboard",
-      });
+      // NextAuth.js v5: gunakan signIn dengan provider name
+      await signIn("google", { callbackURL: "/dashboard" });
 
-      // Jika sampai sini, berarti redirect tidak terjadi
-      console.log("Redirect tidak terjadi secara otomatis");
-      setLoading(false);
+      // Redirect akan terjadi otomatis oleh NextAuth
     } catch (error) {
       console.error("Google Auth error:", error);
       toast.error(error instanceof Error ? error.message : "Gagal login dengan Google");
