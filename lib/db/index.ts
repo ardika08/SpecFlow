@@ -78,15 +78,8 @@ function getDb(): Database {
   return dbInstance!;
 }
 
-// Export proxy to db for lazy access
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const db = new Proxy({} as any, {
-  get(target, prop) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // @ts-expect-error - dynamic access to db methods
-    return getDb()[prop];
-  },
-});
+// Export db as the result of getDb() (evaluated on first import)
+export const db = getDb();
 
 export { schema, provider };
 export * from "./schema";

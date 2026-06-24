@@ -2,6 +2,7 @@
  * Custom Drizzle Adapter untuk NextAuth.js dengan PostgreSQL/Neon
  *
  * Lazy initialization - database connection hanya dibuat saat dibutuhkan
+ * Compatible with DrizzleAdapter
  */
 
 import { drizzle } from "drizzle-orm/neon-http";
@@ -21,14 +22,14 @@ function getDb() {
   return dbInstance;
 }
 
-// Export lazy-initialized db
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const db = new Proxy({} as any, {
-  get(target, prop) {
-    // @ts-expect-error - dynamic access to db methods
-    return getDb()[prop];
-  },
-});
+// Export a function to get db (for DrizzleAdapter compatibility)
+export function getDrizzleDb() {
+  return getDb();
+}
+
+// For backward compatibility, also export db as a direct getter
+// This will be evaluated on first import
+export const db = getDb();
 
 // Export schema for NextAuth.js
 export { schema };
