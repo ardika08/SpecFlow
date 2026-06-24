@@ -14,8 +14,14 @@ import { notifyQuotaWarning } from "@/lib/notifications/notify";
 export async function POST(request: NextRequest) {
   try {
     // Verifikasi session
-    const { user, response: authResponse } = await getSessionUser(request);
-    if (authResponse) return authResponse;
+    const { user, response: authResponse } = await getSessionUser();
+
+    if (!user || authResponse) {
+      return authResponse || new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401 }
+      );
+    }
 
     const body = await request.json();
     const { projectId, message, history } = body;
@@ -222,8 +228,14 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Verifikasi session
-    const { user, response: authResponse } = await getSessionUser(request);
-    if (authResponse) return authResponse;
+    const { user, response: authResponse } = await getSessionUser();
+
+    if (!user || authResponse) {
+      return authResponse || new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401 }
+      );
+    }
 
     const searchParams = request.nextUrl.searchParams;
     const projectId = searchParams.get("projectId");
