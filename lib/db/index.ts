@@ -82,7 +82,8 @@ function getDb(): Database {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const db = new Proxy({} as any, {
   get(target, prop) {
-    return getDb()[prop];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return getDb()[prop as string];
   },
 });
 
