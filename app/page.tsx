@@ -47,6 +47,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSession, signOut } from "@/lib/hooks";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
 
+// Disable static optimization for authenticated page
+export const dynamic = 'force-dynamic';
+
 type Screen = "landing" | "tech" | "questions" | "generating" | "result" | "dashboard";
 type Tier = "Freemium" | "Starter" | "Pro";
 type ViewMode = "preview" | "edit";
@@ -1321,7 +1324,8 @@ function analyzeIdeaAndRecommend(idea: string): AnalyzedRecommendation {
 
 export default function Home() {
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const sessionData = useSession() ?? { data: null, status: "loading", update: async () => null };
+  const { data: session, status } = sessionData;
   const [userTier, setUserTier] = useState<string>("Freemium");
 
   // Fetch tier terbaru dari server (tidak mengandalkan cache session)
@@ -1802,7 +1806,7 @@ export default function Home() {
           onToggleUserMenu={() => setUserMenuOpen((current) => !current)}
           userMenuOpen={userMenuOpen}
           session={session}
-          isPending={isPending}
+          isPending={status === "loading"}
           userTier={userTier}
           usage={usage}
           onSignOut={async () => {

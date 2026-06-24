@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, projects } from "@/lib/db";
+import { db, projects, users } from "@/lib/db";
 import { eq, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { getSessionUser } from "@/lib/auth/session";
@@ -9,8 +9,10 @@ import { getSessionUser } from "@/lib/auth/session";
 // Auth: Session diverifikasi. userId diambil dari session, bukan query param.
 export async function GET(request: NextRequest) {
   try {
-    const { user, response: authResponse } = await getSessionUser(request);
-    if (authResponse) return authResponse;
+    const { user } = await getSessionUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const userProjects = await (db as any)
@@ -55,8 +57,10 @@ export async function GET(request: NextRequest) {
 // Auth: Session diverifikasi. userId diambil dari session, bukan dari body.
 export async function POST(request: NextRequest) {
   try {
-    const { user, response: authResponse } = await getSessionUser(request);
-    if (authResponse) return authResponse;
+    const { user } = await getSessionUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const body = await request.json();
     const { title, initialIdea, answers, techMode, stack, generatedPrd, status } = body;
@@ -64,6 +68,11 @@ export async function POST(request: NextRequest) {
     if (!title || !initialIdea) {
       return NextResponse.json({ error: "Missing required fields: title, initialIdea" }, { status: 400 });
     }
+
+    // Fetch user tier from database
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dbUser = await (db as any).select().from(users).where(eq(users.id, user.id)).get();
+    const userTier = dbUser?.tier || "Freemium";
 
     const projectId = nanoid();
 
@@ -80,7 +89,7 @@ export async function POST(request: NextRequest) {
         stack: stack ? JSON.stringify(stack) : null,
         generatedPrd: generatedPrd || null,
         status: status || "Draft",
-        tier: user.tier,
+        tier: userTier,
       })
       .returning()
       .get();

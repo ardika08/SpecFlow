@@ -69,7 +69,7 @@ function UserMenuButton({
 
 export function Navbar() {
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const { data: session, status } = useSession();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
 
@@ -158,7 +158,7 @@ export function Navbar() {
 
         {/* Right: User info and actions */}
         <div className="flex items-center gap-2">
-          {isPending ? (
+          {status === "loading" ? (
             <div className="h-8 w-8 animate-pulse rounded-full bg-white/10" />
           ) : session ? (
             <>

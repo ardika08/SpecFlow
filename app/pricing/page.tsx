@@ -13,6 +13,9 @@ import { BGPattern } from "@/components/ui/bg-pattern";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSession } from "@/lib/hooks";
 
+// Disable static optimization for authenticated page
+export const dynamic = 'force-dynamic';
+
 type Tier = "Freemium" | "Starter" | "Pro";
 
 type Plan = {
@@ -28,7 +31,8 @@ type Plan = {
 
 export default function PricingPage() {
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const sessionData = useSession() ?? { data: null, status: "loading", update: async () => null };
+  const { data: session, status } = sessionData;
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
@@ -40,10 +44,10 @@ export default function PricingPage() {
   const [creatingPayment, setCreatingPayment] = useState(false);
 
   useEffect(() => {
-    if (!session && !isPending) {
+    if (status === "unauthenticated") {
       router.push("/login?redirect=/pricing");
     }
-  }, [session, isPending, router]);
+  }, [status, router]);
 
   useEffect(() => {
     fetchPlans();

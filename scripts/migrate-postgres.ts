@@ -49,8 +49,7 @@ async function migrate() {
         name: user.name,
         email: user.email,
         emailVerified: user.emailVerified,
-        passwordHash: user.passwordHash,
-        avatar: user.avatar,
+        image: (user as any).avatar || (user as any).image, // Handle both old and new field names
         phone: user.phone,
         tier: user.tier,
         currentPeriodEnd: user.currentPeriodEnd,
@@ -65,15 +64,12 @@ async function migrate() {
     console.log(`Found ${sessions.length} sessions`);
 
     for (const session of sessions) {
+      const s = session as any;
       await pgDb.insert(pgSchema.sessions).values({
         id: session.id,
         userId: session.userId,
-        expiresAt: session.expiresAt,
-        token: session.token,
-        ipAddress: session.ipAddress,
-        userAgent: session.userAgent,
-        createdAt: session.createdAt,
-        updatedAt: session.updatedAt,
+        expires: s.expiresAt || session.expires, // Map old to new field name
+        sessionToken: s.token || session.sessionToken, // Map old to new field name
       }).onConflictDoNothing();
     }
 
@@ -83,19 +79,16 @@ async function migrate() {
     console.log(`Found ${accounts.length} accounts`);
 
     for (const account of accounts) {
+      const a = account as any;
       await pgDb.insert(pgSchema.accounts).values({
         id: account.id,
         userId: account.userId,
-        accountId: account.accountId,
-        providerId: account.providerId,
-        accessToken: account.accessToken,
-        refreshToken: account.refreshToken,
-        idToken: account.idToken,
-        expiresAt: account.expiresAt,
-        password: account.password,
-        passwordHash: account.passwordHash,
-        createdAt: account.createdAt,
-        updatedAt: account.updatedAt,
+        provider: a.providerId || account.provider, // Map old to new field name
+        providerAccountId: a.accountId || account.providerAccountId, // Map old to new field name
+        access_token: a.accessToken || account.access_token, // Map old to new field name
+        refresh_token: a.refreshToken || account.refresh_token, // Map old to new field name
+        id_token: a.idToken || account.id_token, // Map old to new field name
+        expires_at: a.expiresAt || account.expires_at, // Map old to new field name
       }).onConflictDoNothing();
     }
 

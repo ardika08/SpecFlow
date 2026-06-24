@@ -11,8 +11,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { user, response: authResponse } = await getSessionUser(request);
-    if (authResponse) return authResponse;
+    const { user } = await getSessionUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { id } = await params;
 
@@ -50,8 +52,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { user, response: authResponse } = await getSessionUser(request);
-    if (authResponse) return authResponse;
+    const { user } = await getSessionUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { id } = await params;
     const body = await request.json();
@@ -99,8 +103,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { user, response: authResponse } = await getSessionUser(request);
-    if (authResponse) return authResponse;
+    const { user } = await getSessionUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { id } = await params;
 

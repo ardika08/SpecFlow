@@ -11,6 +11,9 @@ import { BGPattern } from "@/components/ui/bg-pattern";
 import { Navbar } from "@/components/navbar";
 import { useSession } from "@/lib/hooks";
 
+// Disable static optimization for authenticated page
+export const dynamic = 'force-dynamic';
+
 type Tier = "Freemium" | "Starter" | "Pro";
 
 type Project = {
@@ -24,15 +27,16 @@ type Project = {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const sessionData = useSession() ?? { data: null, status: "loading", update: async () => null };
+  const { data: session, status } = sessionData;
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!session && !isPending) {
+    if (status === "unauthenticated") {
       router.push("/login");
     }
-  }, [session, isPending, router]);
+  }, [status, router]);
 
   useEffect(() => {
     if (session) {

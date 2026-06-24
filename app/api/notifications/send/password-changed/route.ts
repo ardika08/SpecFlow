@@ -6,8 +6,7 @@ import { notifyPasswordChanged } from "@/lib/notifications/notify";
  * POST /api/notifications/send/password-changed
  *
  * Memicu notifikasi (in-app + email) setelah user berhasil mengubah password.
- * Endpoint ini dipanggil dari client setelah `authClient.changePassword()` sukses,
- * karena change password dilakukan client-side via Better Auth.
+ * Endpoint ini dipanggil dari client setelah password change sukses.
  *
  * Auth: Session diverifikasi. Hanya untuk user yang sedang login.
  */

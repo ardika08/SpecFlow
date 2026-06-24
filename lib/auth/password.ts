@@ -14,3 +14,8 @@ export async function verifyPassword(
   // Placeholder - not used with Google OAuth
   return password === hash;
 }
+
+// Check if a hash is a bcrypt hash (starts with $2a$, $2b$, or $2y$)
+export function isBcryptHash(hash: string): boolean {
+  return /^\$2[aby]\$/.test(hash);
+}

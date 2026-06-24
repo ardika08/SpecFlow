@@ -21,7 +21,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useSession, signOut, authClient } from "@/lib/hooks";
+import { useSession, signOut } from "@/lib/hooks";
+
+// Disable static optimization for authenticated page
+export const dynamic = 'force-dynamic';
 
 type Tier = "Freemium" | "Starter" | "Pro";
 
@@ -44,7 +47,8 @@ type UsageStats = {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { data: session, isPending, refetch } = useSession();
+  const sessionData = useSession() ?? { data: null, status: "loading", update: async () => null };
+  const { data: session, status, update } = sessionData;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -72,10 +76,10 @@ export default function SettingsPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   useEffect(() => {
-    if (!session && !isPending) {
+    if (status === "unauthenticated") {
       router.push("/login");
     }
-  }, [session, isPending, router]);
+  }, [status, router]);
 
   useEffect(() => {
     if (session) {
@@ -137,7 +141,7 @@ export default function SettingsPage() {
         throw new Error(error.error || "Failed to update profile");
       }
 
-      await refetch();
+      await update();
       toast.success("Profil berhasil diperbarui");
       await fetchProfile();
     } catch (error) {
@@ -166,24 +170,18 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      // Gunakan Better Auth change-password API (endpoint: POST /api/auth/change-password)
-      // Better Auth memverifikasi currentPassword terhadap hash di tabel accounts
-      // dan menyimpan newPassword dengan hash yang aman secara otomatis.
-      const { error } = await authClient.changePassword({
-        currentPassword,
-        newPassword,
-        revokeOtherSessions: true,
+      // Call API endpoint directly
+      const response = await fetch("/api/users/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
       });
 
-      if (error) {
-        throw new Error(error.message || "Failed to change password");
-      }
+      const data = await response.json();
 
-      // Kirim notifikasi password changed (in-app + email)
-      // Dipanggil setelah changePassword sukses, best-effort (tidak memblokir UI)
-      fetch("/api/notifications/send/password-changed", { method: "POST" }).catch(
-        (e) => console.error("Failed to send password-changed notification:", e)
-      );
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to change password");
+      }
 
       toast.success("Password berhasil diubah");
       setCurrentPassword("");

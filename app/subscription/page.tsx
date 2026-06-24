@@ -31,6 +31,9 @@ import { BGPattern } from "@/components/ui/bg-pattern";
 import { useSession } from "@/lib/hooks";
 import { SUBSCRIPTION_PLANS } from "@/lib/mayar/client";
 
+// Disable static optimization for authenticated page
+export const dynamic = 'force-dynamic';
+
 type Tier = "Freemium" | "Starter" | "Pro";
 
 type Plan = {
@@ -73,7 +76,8 @@ function formatPrice(price: number) {
 function SubscriptionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session, isPending } = useSession();
+  const sessionData = useSession() ?? { data: null, status: "loading", update: async () => null };
+  const { data: session, status: sessionStatus } = sessionData;
   const [currentTier, setCurrentTier] = useState<Tier>("Freemium");
   const [currentPeriodEnd, setCurrentPeriodEnd] = useState<Date | null>(null);
   const [processing, setProcessing] = useState<string | null>(null);
@@ -89,10 +93,10 @@ function SubscriptionContent() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!session && !isPending) {
+    if (sessionStatus === "unauthenticated") {
       router.push("/login?redirect=/subscription");
     }
-  }, [session, isPending, router]);
+  }, [session, sessionStatus, router]);
 
   // Fetch current tier, phone, dan currentPeriodEnd dari server
   useEffect(() => {
@@ -247,7 +251,7 @@ function SubscriptionContent() {
   ];
 
   // Loading state
-  if (isPending || (!session && !statusChecked)) {
+  if (sessionStatus === "loading" || (!session && !statusChecked)) {
     return (
       <main className="relative min-h-screen overflow-hidden px-3 py-4 text-foreground sm:px-6 sm:py-5">
         <BGPattern

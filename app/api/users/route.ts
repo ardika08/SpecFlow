@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, users } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { auth } from "@/lib/auth";
+import { auth } from "@/auth";
 import { hashPassword } from "@/lib/auth/password";
 import { notifyWelcome } from "@/lib/notifications/notify";
 
@@ -135,9 +135,7 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Get user from session
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

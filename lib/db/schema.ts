@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, bigint } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 import { randomBytes } from "crypto";
 
 /**
@@ -42,7 +42,7 @@ export const accounts = pgTable("accounts", {
   providerAccountId: text("provider_account_id").notNull(),
   refresh_token: text("refresh_token"),
   access_token: text("access_token"),
-  expires_at: bigint("expires_at", { mode: "number" }),
+  expires_at: integer("expires_at"), // Changed from bigint to integer for DrizzleAdapter compatibility
   token_type: text("token_type"),
   scope: text("scope"),
   id_token: text("id_token"),

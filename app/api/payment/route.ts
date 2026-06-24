@@ -2,14 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createMayarClient, SUBSCRIPTION_PLANS } from "@/lib/mayar/client";
 import { db, users } from "@/lib/db";
 import { eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { auth } from "@/auth";
 
 // POST /api/payment - Create a new payment
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
