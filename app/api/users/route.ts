@@ -16,11 +16,9 @@ export async function GET(request: NextRequest) {
     let user;
 
     if (userId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      user = await (db as any).select().from(users).where(eq(users.id, userId)).get();
+      user = (await db.select().from(users).where(eq(users.id, userId)).limit(1))[0];
     } else if (email) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      user = await (db as any).select().from(users).where(eq(users.email, email)).get();
+      user = (await db.select().from(users).where(eq(users.email, email)).limit(1))[0];
     } else {
       return NextResponse.json({ error: "User ID or email required" }, { status: 400 });
     }
@@ -53,8 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const existingUser = await (db as any).select().from(users).where(eq(users.email, email)).get();
+    const existingUser = (await db.select().from(users).where(eq(users.email, email)).limit(1))[0];
     if (existingUser) {
       return NextResponse.json({ error: "User with this email already exists" }, { status: 409 });
     }
@@ -62,8 +59,7 @@ export async function POST(request: NextRequest) {
     const userId = nanoid();
     const hashedPassword = await hashPassword(password);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const newUser = await (db as any)
+    const newUser = (await db
       .insert(users)
       .values({
         id: userId,
@@ -72,8 +68,7 @@ export async function POST(request: NextRequest) {
         passwordHash: hashedPassword,
         tier: "Freemium",
       })
-      .returning()
-      .get();
+      .returning())[0];
 
     // Return user without password hash
     const { passwordHash: _passwordHash2, ...userWithoutPassword } = newUser;
@@ -100,8 +95,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const existingUser = await (db as any).select().from(users).where(eq(users.id, userId)).get();
+    const existingUser = (await db.select().from(users).where(eq(users.id, userId)).limit(1))[0];
     if (!existingUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -111,11 +105,9 @@ export async function PATCH(request: NextRequest) {
     if (avatar !== undefined) updateData.avatar = avatar || null;
     updateData.updatedAt = new Date();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any).update(users).set(updateData).where(eq(users.id, userId)).run();
+    await db.update(users).set(updateData).where(eq(users.id, userId));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updatedUser = await (db as any).select().from(users).where(eq(users.id, userId)).get();
+    const updatedUser = (await db.select().from(users).where(eq(users.id, userId)).limit(1))[0];
 
     if (!updatedUser) {
       return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
@@ -142,8 +134,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete user (cascade will handle related records)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any).delete(users).where(eq(users.id, session.user.id)).run();
+    await db.delete(users).where(eq(users.id, session.user.id));
 
     return NextResponse.json({ message: "Account deleted successfully" });
   } catch (error) {

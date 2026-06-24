@@ -13,8 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user tier
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const user = await (db as any).select().from(users).where(eq(users.id, session.user.id)).get();
+    const user = (await db.select().from(users).where(eq(users.id, session.user.id)).limit(1))[0];
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -23,12 +22,11 @@ export async function GET(request: NextRequest) {
     // Get current month's quota
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let quota = await (db as any)
+    let quota = (await db
       .select()
       .from(usageQuotas)
       .where(and(eq(usageQuotas.userId, session.user.id), eq(usageQuotas.month, currentMonth)))
-      .get();
+      .limit(1))[0];
 
     if (!quota) {
       // Create new quota record if doesn't exist

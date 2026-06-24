@@ -50,30 +50,26 @@ export async function POST(request: NextRequest) {
       periodEnd.setDate(periodEnd.getDate() + 30);
 
       // Update user tier
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (db as any).update(users)
+      await db.update(users)
         .set({
           tier: tier as string, // Explicit cast to satisfy type checker
           currentPeriodEnd: periodEnd,
           updatedAt: new Date(),
         })
-        .where(eq(users.id, userId as string))
-        .run();
+        .where(eq(users.id, userId as string));
 
       // Get or create usage quota for current month (reset for new subscription)
       const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let quota = await (db as any)
+      let quota = (await db
         .select()
         .from(usageQuotas)
         .where(and(eq(usageQuotas.userId, userId as string), eq(usageQuotas.month, currentMonth)))
-        .get();
+        .limit(1))[0];
 
       if (!quota) {
         const newQuotaId = nanoid();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        quota = await (db as any)
+        quota = (await db
           .insert(usageQuotas)
           .values({
             id: newQuotaId,
@@ -82,15 +78,13 @@ export async function POST(request: NextRequest) {
             prdCount: 0,
             chatCount: 0,
           })
-          .returning()
-          .get();
+          .returning())[0];
       }
 
       console.log(`User ${userId} upgraded to ${tier} tier`);
 
       // Kirim notifikasi payment success (in-app + email, best-effort)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const userRecord = await (db as any).select().from(users).where(eq(users.id, userId as string)).get();
+      const userRecord = (await db.select().from(users).where(eq(users.id, userId as string)).limit(1))[0];
       if (userRecord) {
         notifyPaymentSuccess(
           userRecord.id,

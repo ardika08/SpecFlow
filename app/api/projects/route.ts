@@ -14,8 +14,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userProjects = await (db as any)
+    const userProjects = await db
       .select({
         id: projects.id,
         title: projects.title,
@@ -70,14 +69,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch user tier from database
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dbUser = await (db as any).select().from(users).where(eq(users.id, user.id)).get();
+    const dbUser = (await db.select().from(users).where(eq(users.id, user.id)).limit(1))[0];
     const userTier = dbUser?.tier || "Freemium";
 
     const projectId = nanoid();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const newProject = await (db as any)
+    const newProject = (await db
       .insert(projects)
       .values({
         id: projectId,
@@ -91,8 +88,7 @@ export async function POST(request: NextRequest) {
         status: status || "Draft",
         tier: userTier,
       })
-      .returning()
-      .get();
+      .returning())[0];
 
     return NextResponse.json({ project: newProject }, { status: 201 });
   } catch (error) {

@@ -33,8 +33,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Fetch user data with tier
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userData = await (db as any).select().from(users).where(eq(users.id, user.id)).get();
+    const userData = (await db.select().from(users).where(eq(users.id, user.id)).limit(1))[0];
 
     if (!userData) {
       return new Response(
@@ -76,17 +75,15 @@ export async function POST(request: NextRequest) {
     // Cek & update kuota PRD bulanan
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let quota = await (db as any)
+    let quota = (await db
       .select()
       .from(usageQuotas)
       .where(and(eq(usageQuotas.userId, user.id), eq(usageQuotas.month, currentMonth)))
-      .get();
+      .limit(1))[0];
 
     if (!quota) {
       const newQuotaId = nanoid();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      quota = await (db as any)
+      quota = (await db
         .insert(usageQuotas)
         .values({
           id: newQuotaId,
@@ -95,8 +92,7 @@ export async function POST(request: NextRequest) {
           prdCount: 0,
           chatCount: 0,
         })
-        .returning()
-        .get();
+        .returning())[0];
     }
 
     const prdLimit = PRD_TIER_LIMITS[userData.tier as keyof typeof PRD_TIER_LIMITS] ?? 0;
@@ -113,12 +109,10 @@ export async function POST(request: NextRequest) {
 
     // Increment PRD count
     const newPrdCount = quota.prdCount + 1;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any)
+    await db
       .update(usageQuotas)
       .set({ prdCount: newPrdCount, updatedAt: new Date() })
-      .where(eq(usageQuotas.id, quota.id))
-      .run();
+      .where(eq(usageQuotas.id, quota.id));
 
     // Kirim notifikasi quota warning jika mendekati limit (80% atau 1 sisa)
     if (prdLimit !== Infinity && prdLimit - newPrdCount <= Math.max(1, Math.ceil(prdLimit * 0.2))) {

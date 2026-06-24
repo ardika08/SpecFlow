@@ -1,15 +1,27 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/pg-adapter";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // Gate: hanya boleh dijalankan dengan secret yang benar.
+  // Set MIGRATION_SECRET di environment, lalu panggil:
+  //   /api/migrate-authjs?secret=XXXX  atau header x-migration-secret
+  const secret =
+    req.nextUrl.searchParams.get("secret") ||
+    req.headers.get("x-migration-secret");
+  if (!process.env.MIGRATION_SECRET || secret !== process.env.MIGRATION_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const results: string[] = [];
 
-    // 1. Backup data dari users (jika ada)
-    const existingUsers = await db.execute(`
-      SELECT COUNT(*) as count FROM users;
-    `);
-    results.push(`Existing users: ${existingUsers.rows[0].count}`);
+    // 1. Cek jumlah user lama (aman kalau tabel belum ada)
+    try {
+      const existingUsers = await db.execute(`SELECT COUNT(*) as count FROM users;`);
+      results.push(`Existing users: ${existingUsers.rows[0].count}`);
+    } catch {
+      results.push("Tabel users belum ada (fresh database)");
+    }
 
     // 2. Drop old tables (CASCADE untuk drop dependencies)
     await db.execute(`DROP TABLE IF EXISTS project_messages CASCADE;`);
@@ -50,6 +62,7 @@ export async function GET() {
         email_verified TIMESTAMP,
         image TEXT,
         phone TEXT,
+        password_hash TEXT,
         tier TEXT NOT NULL DEFAULT 'Freemium',
         current_period_end TIMESTAMP,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -68,7 +81,7 @@ export async function GET() {
         provider_account_id TEXT NOT NULL,
         refresh_token TEXT,
         access_token TEXT,
-        expires_at BIGINT,
+        expires_at INTEGER,
         token_type TEXT,
         scope TEXT,
         id_token TEXT,
@@ -135,8 +148,8 @@ export async function GET() {
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         month TEXT NOT NULL,
-        prd_count TEXT NOT NULL DEFAULT '0',
-        chat_count TEXT NOT NULL DEFAULT '0',
+        prd_count INTEGER NOT NULL DEFAULT 0,
+        chat_count INTEGER NOT NULL DEFAULT 0,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );

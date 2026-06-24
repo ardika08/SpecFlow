@@ -1,47 +1,53 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
-// Public routes that don't require authentication
-const publicPaths = [
+/**
+ * Path yang dicocokkan persis (exact match).
+ * Penting: "/" harus exact, kalau pakai startsWith semua path jadi public.
+ */
+const publicExactPaths = new Set<string>([
   "/",
   "/login",
   "/register",
-  "/api/auth",
-  "/api/generate",
-  "/api/projects",
-  "/api/export",
-  "/api/chat",
-  "/api/webhooks",
-  "/api/payment",
-  "/api/notifications",
+]);
+
+/**
+ * Prefix path yang public (untuk subroute).
+ * Catatan: route migrasi TIDAK ada di sini — sengaja diproteksi via secret di handler.
+ */
+const publicPrefixPaths = [
+  "/api/auth/",          // semua endpoint Auth.js
+  "/api/webhooks/",      // webhook eksternal (Mayar dll)
+  "/api/debug-auth-config", // debug-only, tidak membocorkan secret
 ];
 
 function isPublicPath(pathname: string): boolean {
-  return publicPaths.some((path) => pathname === path || pathname.startsWith(path));
+  if (publicExactPaths.has(pathname)) return true;
+  return publicPrefixPaths.some((prefix) => pathname.startsWith(prefix));
 }
 
 export default auth((req) => {
   const pathname = req.nextUrl.pathname;
 
-  // Skip middleware for static files
+  // Skip middleware untuk file statis (mengandung titik di nama file)
   if (pathname.includes(".")) {
     return NextResponse.next();
   }
 
-  // Allow public paths
+  // Izinkan path public
   if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
-  // For protected routes, check if user is authenticated
+  // Untuk route terproteksi, cek autentikasi
   if (!req.auth) {
-    // Redirect to login for protected pages
+    // Redirect ke login untuk halaman
     if (!pathname.startsWith("/api")) {
       const signInUrl = new URL("/login", req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(signInUrl);
     }
-    // Return 401 for protected API routes
+    // 401 untuk API yang terproteksi
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

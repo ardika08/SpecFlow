@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
+import { db } from "@/lib/db/pg-adapter";
+import { users } from "@/lib/db/schema";
 
 /**
  * GET /api/auth/get-session
@@ -15,16 +18,14 @@ export async function GET() {
       return NextResponse.json({ user: null }, { status: 401 });
     }
 
-    // Fetch user tier from database
-    const { db, users } = await import("@/lib/db");
-    const { eq } = await import("drizzle-orm");
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const user = await (db as any)
+    // Ambil tier & phone terbaru dari Postgres (neon-http)
+    const rows = await db
       .select({ tier: users.tier, phone: users.phone })
       .from(users)
       .where(eq(users.id, session.user.id))
-      .get();
+      .limit(1);
+
+    const user = rows[0];
 
     return NextResponse.json({
       user: {

@@ -19,8 +19,7 @@ export async function createNotification(input: CreateNotificationInput): Promis
   const notificationId = nanoid();
   const now = new Date();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const notification = await (db as any)
+  const notification = (await db
     .insert(notifications)
     .values({
       id: notificationId,
@@ -34,8 +33,7 @@ export async function createNotification(input: CreateNotificationInput): Promis
       metadata: input.metadata ? JSON.stringify(input.metadata) : null,
       createdAt: now,
     })
-    .returning()
-    .get();
+    .returning())[0];
 
   return {
     id: notification.id,
@@ -55,14 +53,12 @@ export async function createNotification(input: CreateNotificationInput): Promis
  * Get all notifications for a user
  */
 export async function getUserNotifications(userId: string): Promise<Notification[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const userNotifications = await (db as any)
+  const userNotifications = await db
     .select()
     .from(notifications)
     .where(eq(notifications.userId, userId))
     .orderBy(desc(notifications.createdAt))
-    .limit(50)
-    .all();
+    .limit(50);
 
   return userNotifications.map((n: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
     id: n.id,
@@ -82,12 +78,10 @@ export async function getUserNotifications(userId: string): Promise<Notification
  * Get unread notifications count for a user
  */
 export async function getUnreadCount(userId: string): Promise<number> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = await (db as any)
+  const result = await db
     .select()
     .from(notifications)
-    .where(eq(notifications.userId, userId))
-    .all();
+    .where(eq(notifications.userId, userId));
 
   return result.filter((n: any) => !n.read).length; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
@@ -96,33 +90,27 @@ export async function getUnreadCount(userId: string): Promise<number> {
  * Mark notification as read
  */
 export async function markAsRead(notificationId: string): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any)
+  await db
     .update(notifications)
     .set({ read: true })
-    .where(eq(notifications.id, notificationId))
-    .run();
+    .where(eq(notifications.id, notificationId));
 }
 
 /**
  * Mark all notifications as read for a user
  */
 export async function markAllAsRead(userId: string): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const userNotifications = await (db as any)
+  const userNotifications = await db
     .select()
     .from(notifications)
-    .where(eq(notifications.userId, userId))
-    .all();
+    .where(eq(notifications.userId, userId));
 
   for (const notification of userNotifications) {
     if (!notification.read) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (db as any)
+      await db
         .update(notifications)
         .set({ read: true })
-        .where(eq(notifications.id, notification.id))
-        .run();
+        .where(eq(notifications.id, notification.id));
     }
   }
 }
@@ -131,8 +119,7 @@ export async function markAllAsRead(userId: string): Promise<void> {
  * Delete a notification
  */
 export async function deleteNotification(notificationId: string): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any).delete(notifications).where(eq(notifications.id, notificationId)).run();
+  await db.delete(notifications).where(eq(notifications.id, notificationId));
 }
 
 /**

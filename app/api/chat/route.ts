@@ -34,8 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verifikasi ownership: project harus milik user yang login
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const project = await (db as any).select().from(projects).where(eq(projects.id, projectId)).get();
+    const project = (await db.select().from(projects).where(eq(projects.id, projectId)).limit(1))[0];
 
     if (!project) {
       return new Response(JSON.stringify({ error: "Project not found" }), { status: 404 });
@@ -46,8 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch user data with tier
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userData = await (db as any).select().from(users).where(eq(users.id, user.id)).get();
+    const userData = (await db.select().from(users).where(eq(users.id, user.id)).limit(1))[0];
 
     if (!userData) {
       return new Response(JSON.stringify({ error: "User not found" }), { status: 404 });
@@ -56,14 +54,12 @@ export async function POST(request: NextRequest) {
     // Check user's monthly quota for chat
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let quota = await (db as any).select().from(usageQuotas).where(and(eq(usageQuotas.userId, user.id), eq(usageQuotas.month, currentMonth))).get();
+    let quota = (await db.select().from(usageQuotas).where(and(eq(usageQuotas.userId, user.id), eq(usageQuotas.month, currentMonth))).limit(1))[0];
 
     if (!quota) {
       // Create new quota record for this month
       const newQuotaId = nanoid();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      quota = await (db as any)
+      quota = (await db
         .insert(usageQuotas)
         .values({
           id: newQuotaId,
@@ -72,8 +68,7 @@ export async function POST(request: NextRequest) {
           prdCount: 0,
           chatCount: 0,
         })
-        .returning()
-        .get();
+        .returning())[0];
     }
 
     // Check user tier and limits
@@ -94,8 +89,7 @@ export async function POST(request: NextRequest) {
 
     // Save user message
     const userMessageId = nanoid();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any).insert(projectMessages).values({
+    await db.insert(projectMessages).values({
       id: userMessageId,
       projectId,
       role: "user",
@@ -104,15 +98,13 @@ export async function POST(request: NextRequest) {
 
     // Update quota
     const newChatCount = quota.chatCount + 1;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any)
+    await db
       .update(usageQuotas)
       .set({
         chatCount: newChatCount,
         updatedAt: new Date(),
       })
-      .where(eq(usageQuotas.id, quota.id))
-      .run();
+      .where(eq(usageQuotas.id, quota.id));
 
     // Kirim notifikasi quota warning jika mendekati limit (80% atau 5 sisa)
     if (userLimit.chat !== Infinity && userLimit.chat - newChatCount <= Math.max(5, Math.ceil(userLimit.chat * 0.2))) {
@@ -175,8 +167,7 @@ export async function POST(request: NextRequest) {
 
           // Save AI response to database
           const aiMessageId = nanoid();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (db as any).insert(projectMessages).values({
+          await db.insert(projectMessages).values({
             id: aiMessageId,
             projectId,
             role: "assistant",
@@ -253,12 +244,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Verifikasi ownership
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const project = await (db as any)
+    const project = (await db
       .select()
       .from(projects)
       .where(eq(projects.id, projectId))
-      .get();
+      .limit(1))[0];
 
     if (!project) {
       return new Response(JSON.stringify({ error: "Project not found" }), { status: 404 });
@@ -268,8 +258,7 @@ export async function GET(request: NextRequest) {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const messages = await (db as any)
+    const messages = await db
       .select()
       .from(projectMessages)
       .where(eq(projectMessages.projectId, projectId))

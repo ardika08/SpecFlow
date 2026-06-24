@@ -25,6 +25,9 @@ export const users = pgTable("users", {
   image: text("image"),
   // Custom fields untuk SpecFlow
   phone: text("phone"),
+  // Sisa dari era Better Auth - hanya dipakai endpoint legacy /api/users (dead code).
+  // Login utama pakai Google OAuth, kolom ini nullable.
+  passwordHash: text("password_hash"),
   tier: text("tier").notNull().default("Freemium"),
   currentPeriodEnd: timestamp("current_period_end"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -113,8 +116,8 @@ export const usageQuotas = pgTable("usage_quotas", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   month: text("month").notNull(),
-  prdCount: text("prd_count").notNull().default("0"),
-  chatCount: text("chat_count").notNull().default("0"),
+  prdCount: integer("prd_count").notNull().default(0),
+  chatCount: integer("chat_count").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

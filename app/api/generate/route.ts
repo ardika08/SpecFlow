@@ -179,17 +179,15 @@ export async function POST(request: NextRequest) {
     // Check user's monthly quota for PRD generation
     const currentMonth = new Date().toISOString().slice(0, 7);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let quota = await (db as any)
+    let quota = (await db
       .select()
       .from(usageQuotas)
       .where(and(eq(usageQuotas.userId, userId), eq(usageQuotas.month, currentMonth)))
-      .get();
+      .limit(1))[0];
 
     if (!quota) {
       const newQuotaId = nanoid();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      quota = await (db as any)
+      quota = (await db
         .insert(usageQuotas)
         .values({
           id: newQuotaId,
@@ -198,13 +196,11 @@ export async function POST(request: NextRequest) {
           prdCount: 0,
           chatCount: 0,
         })
-        .returning()
-        .get();
+        .returning())[0];
     }
 
     // Check user tier and limits
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const user = await (db as any).select().from(users).where(eq(users.id, userId)).get();
+    const user = (await db.select().from(users).where(eq(users.id, userId)).limit(1))[0];
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -272,8 +268,7 @@ export async function POST(request: NextRequest) {
     const projectId = nanoid();
     const title = idea.substring(0, 50) + (idea.length > 50 ? "..." : "");
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any).insert(projects).values({
+    await db.insert(projects).values({
       id: projectId,
       userId,
       title,
@@ -287,15 +282,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Update quota
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any)
+    await db
       .update(usageQuotas)
       .set({
         prdCount: quota.prdCount + 1,
         updatedAt: new Date(),
       })
-      .where(eq(usageQuotas.id, quota.id))
-      .run();
+      .where(eq(usageQuotas.id, quota.id));
 
     return NextResponse.json({
       project: {

@@ -18,8 +18,7 @@ export async function GET(
 
     const { id } = await params;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const project = await (db as any).select().from(projects).where(eq(projects.id, id)).get();
+    const project = (await db.select().from(projects).where(eq(projects.id, id)).limit(1))[0];
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -61,8 +60,7 @@ export async function PUT(
     const body = await request.json();
     const { title, initialIdea, answers, techMode, stack, generatedPrd, status } = body;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const existingProject = await (db as any).select().from(projects).where(eq(projects.id, id)).get();
+    const existingProject = (await db.select().from(projects).where(eq(projects.id, id)).limit(1))[0];
     if (!existingProject) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
@@ -82,11 +80,9 @@ export async function PUT(
     if (status !== undefined) updateData.status = status;
     updateData.updatedAt = new Date();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any).update(projects).set(updateData).where(eq(projects.id, id)).run();
+    await db.update(projects).set(updateData).where(eq(projects.id, id));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updatedProject = await (db as any).select().from(projects).where(eq(projects.id, id)).get();
+    const updatedProject = (await db.select().from(projects).where(eq(projects.id, id)).limit(1))[0];
 
     return NextResponse.json({ project: updatedProject });
   } catch (error) {
@@ -110,8 +106,7 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const existingProject = await (db as any).select().from(projects).where(eq(projects.id, id)).get();
+    const existingProject = (await db.select().from(projects).where(eq(projects.id, id)).limit(1))[0];
     if (!existingProject) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
@@ -121,8 +116,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any).delete(projects).where(eq(projects.id, id)).run();
+    await db.delete(projects).where(eq(projects.id, id));
 
     return NextResponse.json({ message: "Project deleted successfully" });
   } catch (error) {
