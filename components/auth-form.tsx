@@ -25,8 +25,9 @@ export function AuthForm({ mode, onModeChange }: AuthFormProps) {
     try {
       console.log("Memulai Google Auth untuk:", mode);
 
-      // NextAuth.js v5: gunakan signIn dengan provider name
-      await signIn("google", { callbackURL: "/dashboard" });
+      // NextAuth.js v5: gunakan signIn dengan provider name.
+      // Property-nya `callbackUrl` (U kecil), bukan `callbackURL`.
+      await signIn("google", { callbackUrl: "/dashboard" });
 
       // Redirect akan terjadi otomatis oleh NextAuth
     } catch (error) {
