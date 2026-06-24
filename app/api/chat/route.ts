@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     if (userLimit.chat !== Infinity && userLimit.chat - newChatCount <= Math.max(5, Math.ceil(userLimit.chat * 0.2))) {
       notifyQuotaWarning(
         user.id, user.email, user.name,
-        newChatCount, userLimit.chat, user.tier, "chat"
+        newChatCount, userLimit.chat, userData.tier, "chat"
       ).catch((e) => console.error("Failed to send quota warning:", e));
     }
 
