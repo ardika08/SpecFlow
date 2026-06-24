@@ -74,11 +74,9 @@ export async function POST(request: NextRequest) {
 // PATCH /api/notifications - Update notification (mark as read, etc.)
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const { user } = await getSessionUser();
 
-    if (!session?.user?.id) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -105,11 +103,9 @@ export async function PATCH(request: NextRequest) {
 // DELETE /api/notifications?id=xxx - Delete a notification
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const { user } = await getSessionUser();
 
-    if (!session?.user?.id) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
