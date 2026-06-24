@@ -25,6 +25,7 @@ function getDb() {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const db = new Proxy({} as any, {
   get(target, prop) {
+    // @ts-expect-error - dynamic access to db methods
     return getDb()[prop];
   },
 });
