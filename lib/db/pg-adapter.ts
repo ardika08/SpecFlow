@@ -22,6 +22,7 @@ function getDb() {
 }
 
 // Export lazy-initialized db
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const db = new Proxy({} as any, {
   get(target, prop) {
     return getDb()[prop];
