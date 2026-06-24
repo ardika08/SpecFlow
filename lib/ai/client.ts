@@ -201,6 +201,7 @@ export async function generatePRDStream(
     : (["anthropic", "openai"] as AIProvider[]);
 
   const prompt = buildPRDPrompt(request);
+  const errors: { provider: AIProvider; error: string }[] = [];
 
   for (const provider of providers) {
     try {
@@ -210,11 +211,19 @@ export async function generatePRDStream(
         return await streamWithOpenAI(prompt, onChunk);
       }
     } catch (error) {
-      console.warn(`${provider} streaming failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      errors.push({ provider, error: errorMessage });
+      console.warn(`${provider} streaming failed: ${errorMessage}`);
     }
   }
 
-  throw new AIServiceError("All AI providers failed for streaming", "streaming_failed");
+  throw new AIServiceError(
+    `All AI providers failed for streaming: ${errors
+      .map((e) => `${e.provider}: ${e.error}`)
+      .join(", ")}`,
+    "streaming_failed"
+  );
 }
 
 /**
@@ -744,7 +753,7 @@ Untuk konteks proyek ini:
         return await chatWithOpenAI(messagesWithSystem, onChunk, request.maxTokens);
       }
     } catch (error) {
-      const errorMessage = error instanceof AIServiceError ? error.message : "Unknown error";
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       errors.push({ provider, error: errorMessage });
       console.warn(`${provider} chat failed: ${errorMessage}`);
     }
