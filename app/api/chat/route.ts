@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       Pro: { chat: Infinity },
     };
 
-    const userLimit = tierLimits[userData.tier] || { chat: 0 };
+    const userLimit = tierLimits[userData.tier as keyof typeof tierLimits] || { chat: 0 };
 
     if (quota.chatCount >= userLimit.chat && userLimit.chat !== Infinity) {
       return new Response(
