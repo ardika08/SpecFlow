@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { generatePRDStream, type PRDGenerationRequest, AIServiceError } from "@/lib/ai/client";
 import { checkRateLimit } from "@/lib/ai/rate-limit";
 import { getSessionUser } from "@/lib/auth/session";
-import { db, usageQuotas } from "@/lib/db";
+import { db, usageQuotas, users } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { notifyQuotaWarning } from "@/lib/notifications/notify";
@@ -27,7 +27,21 @@ export async function POST(request: NextRequest) {
   try {
     // Verifikasi session — tolongan jika belum login
     const { user, response: authResponse } = await getSessionUser(request);
-    if (authResponse) return authResponse;
+    if (authResponse || !user) return authResponse || new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401 }
+    );
+
+    // Fetch user data with tier
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const userData = await (db as any).select().from(users).where(eq(users.id, user.id)).get();
+
+    if (!userData) {
+      return new Response(
+        JSON.stringify({ error: "User not found" }),
+        { status: 404 }
+      );
+    }
 
     const body = await request.json();
     const { idea, answers, techMode, stack } = body;
@@ -40,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Rate limiting check berdasarkan user dari session
-    const rateLimit = await checkRateLimit(user.id, user.tier);
+    const rateLimit = await checkRateLimit(user.id, userData.tier as "Freemium" | "Starter" | "Pro");
     if (!rateLimit.allowed) {
       return new Response(
         JSON.stringify({
@@ -85,7 +99,7 @@ export async function POST(request: NextRequest) {
         .get();
     }
 
-    const prdLimit = PRD_TIER_LIMITS[user.tier] ?? 0;
+    const prdLimit = PRD_TIER_LIMITS[userData.tier as keyof typeof PRD_TIER_LIMITS] ?? 0;
 
     if (quota.prdCount >= prdLimit && prdLimit !== Infinity) {
       return new Response(
@@ -110,7 +124,7 @@ export async function POST(request: NextRequest) {
     if (prdLimit !== Infinity && prdLimit - newPrdCount <= Math.max(1, Math.ceil(prdLimit * 0.2))) {
       notifyQuotaWarning(
         user.id, user.email, user.name,
-        newPrdCount, prdLimit, user.tier, "PRD"
+        newPrdCount, prdLimit, userData.tier, "PRD"
       ).catch((e) => console.error("Failed to send quota warning:", e));
     }
 
