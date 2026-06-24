@@ -78,9 +78,9 @@ function getDb(): Database {
 }
 
 // Export proxy to db for lazy access
-export const db = new Proxy({} as Database, {
+export const db = new Proxy({} as any, {
   get(target, prop) {
-    return getDb()[prop as keyof Database];
+    return getDb()[prop];
   },
 });
 

@@ -22,9 +22,9 @@ function getDb() {
 }
 
 // Export lazy-initialized db
-export const db = new Proxy({} as ReturnType<typeof drizzle>, {
+export const db = new Proxy({} as any, {
   get(target, prop) {
-    return getDb()[prop as keyof typeof getDb()];
+    return getDb()[prop];
   },
 });
 
