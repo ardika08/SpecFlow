@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { db, projectMessages, usageQuotas, projects } from "@/lib/db";
+import { db, projectMessages, usageQuotas, projects, users } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { chatWithAI, type ChatMessage } from "@/lib/ai/client";
@@ -45,6 +45,14 @@ export async function POST(request: NextRequest) {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
     }
 
+    // Fetch user data with tier
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const userData = await (db as any).select().from(users).where(eq(users.id, user.id)).get();
+
+    if (!userData) {
+      return new Response(JSON.stringify({ error: "User not found" }), { status: 404 });
+    }
+
     // Check user's monthly quota for chat
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
 
@@ -75,7 +83,7 @@ export async function POST(request: NextRequest) {
       Pro: { chat: Infinity },
     };
 
-    const userLimit = tierLimits[user.tier] || { chat: 0 };
+    const userLimit = tierLimits[userData.tier] || { chat: 0 };
 
     if (quota.chatCount >= userLimit.chat && userLimit.chat !== Infinity) {
       return new Response(
