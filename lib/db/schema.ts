@@ -148,3 +148,17 @@ export type UsageQuota = typeof usageQuotas.$inferSelect;
 export type NewUsageQuota = typeof usageQuotas.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
+
+/**
+ * Schema export for DrizzleAdapter compatibility
+ */
+export const schema = {
+  users,
+  accounts,
+  sessions,
+  verification_tokens,
+  projects,
+  projectMessages,
+  usageQuotas,
+  notifications,
+};

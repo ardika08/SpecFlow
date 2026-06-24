@@ -1,7 +1,6 @@
-// Re-export NextAuth auth for backward compatibility
-export { auth, signIn, signOut } from "@/auth";
+// Auth utilities and helpers
+// Avoid direct auth export to prevent client-side bundling
 
-// Session helpers
 export { getSessionUser, requireSessionUser } from "./session";
 
 // Password helper (not used with OAuth, but kept for backward compatibility)
@@ -17,4 +16,20 @@ export async function verifyPassword(
 ): Promise<boolean> {
   // This is a placeholder - not used with Google OAuth
   return password === hash;
+}
+
+// Server-side auth access (dynamic import)
+export async function getAuth() {
+  const { auth } = await import("@/auth");
+  return auth;
+}
+
+export async function getSignIn() {
+  const { signIn } = await import("@/auth");
+  return signIn;
+}
+
+export async function getSignOut() {
+  const { signOut } = await import("@/auth");
+  return signOut;
 }
