@@ -13,12 +13,14 @@ const publicExactPaths = new Set<string>([
 
 /**
  * Prefix path yang public (untuk subroute).
- * Catatan: route migrasi TIDAK ada di sini — sengaja diproteksi via secret di handler.
+ * Catatan: route migrasi dimasukkan di sini supaya middleware tidak menolak,
+ * lalu handler-nya yang melakukan auth via MIGRATION_SECRET.
  */
 const publicPrefixPaths = [
   "/api/auth/",          // semua endpoint Auth.js
   "/api/webhooks/",      // webhook eksternal (Mayar dll)
   "/api/debug-auth-config", // debug-only, tidak membocorkan secret
+  "/api/migrate",        // mencakup /api/migrate dan /api/migrate-authjs (gate by MIGRATION_SECRET)
 ];
 
 function isPublicPath(pathname: string): boolean {
