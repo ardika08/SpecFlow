@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth/session";
 import {
   createNotification,
   getUserNotifications,
@@ -13,11 +13,9 @@ import {
 // GET /api/notifications - Get user's notifications
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const { user } = await getSessionUser();
 
-    if (!session?.user?.id) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -25,11 +23,11 @@ export async function GET(request: NextRequest) {
     const unreadOnly = searchParams.get("unread") === "true";
 
     if (unreadOnly) {
-      const count = await getUnreadCount(session.user.id);
+      const count = await getUnreadCount(user.id);
       return NextResponse.json({ count });
     }
 
-    const notifications = await getUserNotifications(session.user.id);
+    const notifications = await getUserNotifications(user.id);
     return NextResponse.json({ notifications });
   } catch (error) {
     console.error("Error fetching notifications:", error);
@@ -40,11 +38,9 @@ export async function GET(request: NextRequest) {
 // POST /api/notifications - Create a new notification
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const { user } = await getSessionUser();
 
-    if (!session?.user?.id) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -59,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     const notification = await createNotification({
-      userId: session.user.id, // Use session userId instead of from body
+      userId: user.id, // Use session userId instead of from body
       type,
       title,
       message,
@@ -90,7 +86,7 @@ export async function PATCH(request: NextRequest) {
     const { notificationId, markAll } = body;
 
     if (markAll) {
-      await markAllAsRead(session.user.id);
+      await markAllAsRead(user.id);
       return NextResponse.json({ message: "All notifications marked as read" });
     }
 
