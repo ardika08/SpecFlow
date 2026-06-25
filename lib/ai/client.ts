@@ -562,6 +562,8 @@ export interface ChatResponse {
 
 /**
  * Chat with Claude (streaming)
+ * Menggunakan Haiku untuk chat/revisi — lebih cepat & hemat biaya.
+ * PRD generation tetap pakai Sonnet (fungsi terpisah).
  */
 export async function chatWithClaude(
   messages: ChatMessage[],
@@ -582,7 +584,7 @@ export async function chatWithClaude(
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-3-5-haiku-20241022",
       max_tokens: maxTokens,
       stream: !!onChunk,
       messages: messages.map((m) => ({
@@ -653,6 +655,8 @@ export async function chatWithClaude(
 
 /**
  * Chat with OpenAI (streaming)
+ * Menggunakan GPT-4o-mini untuk chat/revisi — lebih cepat & hemat biaya.
+ * Fallback dari Claude Haiku jika Anthropic down.
  */
 export async function chatWithOpenAI(
   messages: ChatMessage[],
@@ -672,7 +676,7 @@ export async function chatWithOpenAI(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       max_tokens: maxTokens,
       stream: !!onChunk,
       messages: [
