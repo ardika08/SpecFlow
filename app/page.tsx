@@ -1492,6 +1492,32 @@ export default function Home() {
                 if (parsed.done) {
                   setProgress(100);
                   setDocumentText(streamContent); // Ensure final content is set
+
+                  // Auto-save project ke database setelah PRD selesai di-generate
+                  try {
+                    const saveResponse = await fetch("/api/projects", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        title: idea.substring(0, 100) || "Untitled Project",
+                        initialIdea: idea || "No description",
+                        answers: mergedAnswers,
+                        techMode,
+                        stack,
+                        generatedPrd: streamContent,
+                        status: "Generated",
+                      }),
+                    });
+                    if (saveResponse.ok) {
+                      const saveData = await saveResponse.json();
+                      if (saveData.project?.id) {
+                        setCurrentProjectId(saveData.project.id);
+                      }
+                    }
+                  } catch (e) {
+                    console.error("Failed to auto-save project:", e);
+                  }
+
                   setTimeout(() => setScreen("result"), 500);
                 }
               } catch (e) {
@@ -1792,7 +1818,7 @@ export default function Home() {
         <Nav
           currentScreen={screen}
           historyOpen={historyOpen}
-          onDashboard={() => setScreen("dashboard")}
+          onDashboard={() => router.push("/dashboard")}
           onHistory={() => setHistoryOpen((current) => !current)}
           onHome={() => setScreen("landing")}
           onOpenPricing={() => {
