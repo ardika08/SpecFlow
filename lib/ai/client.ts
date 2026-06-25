@@ -70,6 +70,7 @@ async function generateWithClaude(
     body: JSON.stringify({
       model: "claude-3-5-sonnet-20241022",
       max_tokens: maxTokens,
+      system: "Kamu adalah Product Manager senior yang ahli menulis PRD (Product Requirement Document) yang terstruktur rapi dan mudah dipahami. Output kamu selalu dalam format Markdown dengan penomoran section yang konsisten dari 1-13. Tulis dalam Bahasa Indonesia yang profesional.",
       messages: [
         {
           role: "user",
@@ -250,6 +251,7 @@ async function streamWithClaude(
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 4000,
       stream: true,
+      system: "Kamu adalah Product Manager senior yang ahli menulis PRD (Product Requirement Document) yang terstruktur rapi dan mudah dipahami. Output kamu selalu dalam format Markdown dengan penomoran section yang konsisten dari 1-13. Tulis dalam Bahasa Indonesia yang profesional.",
       messages: [
         {
           role: "user",
@@ -429,22 +431,33 @@ ${idea}
   }
 
   prompt += `\n**FORMAT OUTPUT:**
-Tolong tulis PRD dalam format Markdown yang terstruktur dengan sections berikut:
-1. Overview
-2. Problem Statement
-3. Goals & Objectives
-4. Target Users & Personas
-5. Core Features
-6. User Flow / User Journey
-7. Technical Architecture (jika tech mode auto, berikan rekomendasi)
-8. Database Schema
-9. API Specifications (hanya endpoint utama)
-10. UI/UX Guidelines
-11. Success Metrics
-12. Implementation Phases (MVP -> Growth -> Scale)
-13. Risks & Mitigations
+Tulis PRD dalam format Markdown dengan aturan berikut:
+- Gunakan heading level 2 (##) untuk setiap section utama.
+- Nomor section WAJIB berurutan dari 1 sampai 13, tidak boleh loncat.
+- Heading ditulis persis dengan format: "## 1. Nama Section", "## 2. Nama Section", dst.
+- Section yang wajib ada (dalam urutan ini, JANGAN diubah, JANGAN ditambah):
 
-Pastikan output dalam Bahasa Indonesia yang profesional namun mudah dipahami.`;
+## 1. Overview
+## 2. Problem Statement
+## 3. Goals & Objectives
+## 4. Target Users & Personas
+## 5. Core Features
+## 6. User Flow / User Journey
+## 7. Technical Architecture
+## 8. Database Schema
+## 9. API Specifications
+## 10. UI/UX Guidelines
+## 11. Success Metrics
+## 12. Implementation Phases (MVP → Growth → Scale)
+## 13. Risks & Mitigations
+
+- Di dalam setiap section, gunakan sub-heading (###) kalau perlu, tapi JANGAN pakai nomor di sub-heading.
+- Gunakan bullet points, tabel, atau code block sesuai konteks.
+- Untuk Database Schema, tulis dalam format tabel Markdown atau code block SQL.
+- Untuk API Specifications, tulis endpoint dalam format: \`METHOD /path\` — Deskripsi.
+- JANGAN mulai output dengan kalimat pengantar atau basa-basi. Langsung mulai dari "## 1. Overview".
+- Tulis dalam Bahasa Indonesia yang profesional namun mudah dipahami.
+- Kalau tech mode auto, berikan rekomendasi tech stack yang sesuai di section 7.`;
 
   return prompt;
 }
