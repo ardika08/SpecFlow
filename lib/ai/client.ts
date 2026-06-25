@@ -52,7 +52,7 @@ export class AIServiceError extends Error {
  */
 async function generateWithClaude(
   prompt: string,
-  maxTokens: number = 4000
+  maxTokens: number = 8000
 ): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -98,7 +98,7 @@ async function generateWithClaude(
  */
 async function generateWithOpenAI(
   prompt: string,
-  maxTokens: number = 4000
+  maxTokens: number = 8000
 ): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
 
@@ -249,7 +249,7 @@ async function streamWithClaude(
     },
     body: JSON.stringify({
       model: "claude-3-5-sonnet-20241022",
-      max_tokens: 4000,
+      max_tokens: 8000,
       stream: true,
       system: "Kamu adalah Product Manager senior yang ahli menulis PRD (Product Requirement Document) yang terstruktur rapi dan mudah dipahami. Output kamu selalu dalam format Markdown dengan penomoran section yang konsisten dari 1-13. Tulis dalam Bahasa Indonesia yang profesional.",
       messages: [
@@ -421,13 +421,14 @@ ${idea}
 
   // Add tech stack info if manual mode
   if (techMode === "manual" && stack) {
-    prompt += `\n**TECH STACK YANG DIPILIH:**\n`;
+    prompt += `\n**TECH STACK YANG DIPILIH USER (WAJIB digunakan di section 7 dan 8):**\n`;
     if (stack.frontend) prompt += `- Frontend: ${stack.frontend}\n`;
     if (stack.backend) prompt += `- Backend: ${stack.backend}\n`;
     if (stack.database) prompt += `- Database: ${stack.database}\n`;
     if (stack.deployment) prompt += `- Deployment: ${stack.deployment}\n`;
+    prompt += `\nGUNAKAN tech stack di atas sebagai dasar arsitektur. JANGAN rekomendasikan stack lain kecuali ada alasan teknis yang kuat (jelaskan alasannya).\n`;
   } else if (techMode === "auto") {
-    prompt += `\n**TECH STACK:** Berikan rekomendasi tech stack yang paling sesuai untuk ide ini.\n`;
+    prompt += `\n**TECH STACK:** Mode otomatis — rekomendasikan tech stack terbaik yang paling cocok untuk ide ini. Jelaskan alasan pemilihan di section 7.\n`;
   }
 
   prompt += `\n**FORMAT OUTPUT:**
@@ -443,7 +444,7 @@ Tulis PRD dalam format Markdown dengan aturan berikut:
 ## 4. Target Users & Personas
 ## 5. Core Features
 ## 6. User Flow / User Journey
-## 7. Technical Architecture
+## 7. Technical Architecture & Tech Stack
 ## 8. Database Schema
 ## 9. API Specifications
 ## 10. UI/UX Guidelines
@@ -451,13 +452,36 @@ Tulis PRD dalam format Markdown dengan aturan berikut:
 ## 12. Implementation Phases (MVP → Growth → Scale)
 ## 13. Risks & Mitigations
 
+INSTRUKSI DETAIL PER SECTION (WAJIB diikuti):
+
+**Section 5 - Core Features:** Jabarkan minimal 5 fitur utama. Setiap fitur harus punya: nama fitur, deskripsi singkat, dan prioritas (Must-have / Nice-to-have).
+
+**Section 6 - User Flow:** Tulis step-by-step user journey yang bernomor (1, 2, 3...) dari pertama kali user membuka aplikasi sampai menyelesaikan task utama. Sertakan decision point dan alternatif path.
+
+**Section 7 - Technical Architecture & Tech Stack:** WAJIB mencakup:
+- Arsitektur sistem (monolith/microservice, client-server, dll)
+- Frontend: framework, bahasa, state management
+- Backend: framework, bahasa, API style (REST/GraphQL)
+- Database: jenis, alasan pemilihan, apakah perlu caching (Redis, dll)
+- Deployment & Hosting: platform, CI/CD, environment (staging/production)
+- Diagram arsitektur sederhana dalam format text/mermaid jika memungkinkan
+${techMode === "manual" ? "- WAJIB gunakan tech stack yang sudah dipilih user di atas." : "- Berikan rekomendasi dengan alasan teknis yang jelas."}
+
+**Section 8 - Database Schema:** Tulis dalam format code block SQL atau tabel Markdown. Sertakan:
+- Nama tabel, kolom, tipe data, constraint (PK, FK, UNIQUE, NOT NULL)
+- Relasi antar tabel (one-to-many, many-to-many)
+- Index yang direkomendasikan untuk performa
+
+**Section 9 - API Specifications:** Tulis minimal 5-8 endpoint utama dalam format:
+\`METHOD /path\` — Deskripsi, request body (jika ada), response format.
+
+ATURAN UMUM:
 - Di dalam setiap section, gunakan sub-heading (###) kalau perlu, tapi JANGAN pakai nomor di sub-heading.
 - Gunakan bullet points, tabel, atau code block sesuai konteks.
-- Untuk Database Schema, tulis dalam format tabel Markdown atau code block SQL.
-- Untuk API Specifications, tulis endpoint dalam format: \`METHOD /path\` — Deskripsi.
 - JANGAN mulai output dengan kalimat pengantar atau basa-basi. Langsung mulai dari "## 1. Overview".
+- Setiap section HARUS berisi konten substantif minimal 3-5 paragraf/bullet points. JANGAN buat section kosong atau terlalu singkat.
 - Tulis dalam Bahasa Indonesia yang profesional namun mudah dipahami.
-- Kalau tech mode auto, berikan rekomendasi tech stack yang sesuai di section 7.`;
+- Total output harus komprehensif dan siap dijadikan acuan development.`;
 
   return prompt;
 }
