@@ -50,7 +50,7 @@ import { NotificationProvider } from "@/components/notifications/notification-pr
 // Disable static optimization for authenticated page
 export const dynamic = 'force-dynamic';
 
-type Screen = "landing" | "tech" | "questions" | "generating" | "result" | "dashboard";
+type Screen = "landing" | "tech" | "questions" | "generating" | "result";
 type Tier = "Freemium" | "Starter" | "Pro";
 type ViewMode = "preview" | "edit";
 type TechMode = "auto" | "manual";
@@ -1901,8 +1901,6 @@ export default function Home() {
               viewMode={viewMode}
             />
           )}
-
-          {screen === "dashboard" && <DashboardScreen onCreate={createNewPlan} onOpenProject={openProject} projects={projects} />}
         </div>
       </div>
 
@@ -1951,7 +1949,7 @@ function Nav({
 }) {
   const userData = getUserDisplayData(session, userTier, usage);
   const router = useRouter();
-  const progressMap: Record<Exclude<Screen, "dashboard">, number> = {
+  const progressMap: Record<Screen, number> = {
     landing: 1,
     tech: 2,
     questions: 3,
@@ -1981,7 +1979,7 @@ function Nav({
             <span
               key={step}
               className={"h-1.5 w-8 rounded-full transition " + (
-                currentScreen !== "dashboard" && progressMap[currentScreen as Exclude<Screen, "dashboard">] >= step
+                progressMap[currentScreen] >= step
                   ? "bg-accent"
                   : "bg-white/10"
               )}
@@ -2778,75 +2776,6 @@ function ResultScreen({
           </div>
         </div>
       </aside>
-    </section>
-  );
-}
-
-function DashboardScreen({
-  onCreate,
-  onOpenProject,
-  projects,
-}: {
-  onCreate: () => void;
-  onOpenProject: (project: Project) => void;
-  projects: Project[];
-}) {
-  return (
-    <section className="mx-auto max-w-[1280px]">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Riwayat racikan</p>
-          <h1 className="mt-3 text-6xl font-bold tracking-[-0.055em] text-[#f7ecda]">Semua ide yang pernah kamu olah</h1>
-          <p className="mt-3 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Mau lanjut dari draft lama, bandingin arah ide, atau sekadar nginget hasil kemarin, semua nongkrong di sini.
-          </p>
-        </div>
-        <Button className="rounded-2xl px-8" onClick={onCreate}>
-          <Plus className="h-4 w-4" />
-          Racik Baru
-        </Button>
-      </div>
-
-      {projects.length === 0 ? (
-        <Card className="border-white/10 bg-[#1b2635]/82">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 text-primary">
-              <Plus className="h-8 w-8" />
-            </div>
-            <h2 className="mt-5 text-2xl font-bold text-[#f7ecda]">Belum ada project</h2>
-            <p className="mt-2 max-w-md text-muted-foreground">
-              Ide pertama kamu belum ada di sini. Mulai racik PRD sekarang biar hasilnya tersimpan dan bisa dibuka lagi.
-            </p>
-            <Button className="mt-6 rounded-2xl px-8" variant="accent" onClick={onCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              Racik PRD Pertama
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {projects.map((project) => (
-            <Card key={project.id} className="border-white/10 bg-[#1b2635]/82 transition hover:-translate-y-1">
-              <CardHeader>
-                <div className="flex items-center justify-between gap-3">
-                  <Badge variant="secondary">{project.tier}</Badge>
-                  <span className="text-xs font-semibold text-muted-foreground">{project.updatedAt}</span>
-                </div>
-                <CardTitle className="text-[#f7ecda]">{project.title}</CardTitle>
-                <CardDescription className="leading-7">{project.summary}</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-muted-foreground">
-                  {project.status}
-                </div>
-                <Button className="w-full rounded-2xl" onClick={() => onOpenProject(project)}>
-                  Buka Lagi
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
     </section>
   );
 }

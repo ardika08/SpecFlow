@@ -106,7 +106,7 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-[1280px]">
         <Navbar />
         {/* Dashboard Header */}
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div className="mb-8 mt-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Riwayat racikan
@@ -119,10 +119,6 @@ export default function DashboardPage() {
               nongkrong di sini.
             </p>
           </div>
-          <Button className="rounded-2xl px-8" onClick={createNewPlan}>
-            <Plus className="mr-2 h-4 w-4" />
-            Racik Baru
-          </Button>
         </div>
 
         {/* Projects Grid */}
